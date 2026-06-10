@@ -201,7 +201,61 @@ Chart.register(monthBoundaryPlugin);
   .section-title { font-size: 14px !important; padding: 9px 12px !important; }
 }
 </style>
-</head><body><div class="container"><div class="header"><h1 id="dashboardTitle">📊 Dashboard KPI - France Routage - Juin 2026</h1><button class="print-btn no-print" onclick="smartPrint()">🖨️ Imprimer</button>
+<style>
+/* ═══════════════════════════════════════
+   BLOC ANOMALIES
+═══════════════════════════════════════ */
+#anomaliesBloc{margin-bottom:16px}
+.anomalies-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.anomaly-summary-card{background:#fff;border-radius:10px;padding:14px 10px;text-align:center;border:2px solid #e0e0e0;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.anomaly-summary-card.total{border-color:#0066cc;background:linear-gradient(135deg,#e8f0fe,#fff)}
+.anomaly-summary-card.critical{border-color:#dc3545;background:linear-gradient(135deg,#fde8e8,#fff)}
+.anomaly-summary-card.warning{border-color:#fd7e14;background:linear-gradient(135deg,#fff3e0,#fff)}
+.anomaly-summary-card.info{border-color:#28a745;background:linear-gradient(135deg,#e8f5e9,#fff)}
+.anomaly-summary-card.trend{border-color:#6f42c1;background:linear-gradient(135deg,#f3e8ff,#fff)}
+.anomaly-summary-num{font-size:28px;font-weight:800;line-height:1}
+.anomaly-summary-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:4px;color:#555}
+.anomaly-summary-card.total .anomaly-summary-num{color:#0066cc}
+.anomaly-summary-card.critical .anomaly-summary-num{color:#dc3545}
+.anomaly-summary-card.warning .anomaly-summary-num{color:#fd7e14}
+.anomaly-summary-card.info .anomaly-summary-num{color:#28a745}
+.anomaly-summary-card.trend .anomaly-summary-num{color:#6f42c1}
+.anomaly-filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.anomaly-filter-btn{padding:5px 14px;border-radius:20px;border:2px solid #ccc;background:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.anomaly-filter-btn.active{color:#fff}
+.anomaly-filter-btn.all.active{background:#0066cc;border-color:#0066cc}
+.anomaly-filter-btn.critical.active{background:#dc3545;border-color:#dc3545}
+.anomaly-filter-btn.warning.active{background:#fd7e14;border-color:#fd7e14}
+.anomaly-filter-btn.info.active{background:#28a745;border-color:#28a745}
+.anomaly-list{display:flex;flex-direction:column;gap:10px}
+.anomaly-item{border-radius:8px;border-left:5px solid #ccc;background:#fff;padding:12px 16px;box-shadow:0 1px 4px rgba(0,0,0,.07);display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start}
+.anomaly-item.critical{border-left-color:#dc3545;background:#fffaf9}
+.anomaly-item.warning{border-left-color:#fd7e14;background:#fffcf8}
+.anomaly-item.info{border-left-color:#28a745;background:#f9fffa}
+.anomaly-badge{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-top:2px}
+.anomaly-item.critical .anomaly-badge{background:#fde8e8}
+.anomaly-item.warning .anomaly-badge{background:#fff3e0}
+.anomaly-item.info .anomaly-badge{background:#e8f5e9}
+.anomaly-body{}
+.anomaly-title{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.anomaly-meta{font-size:12px;color:#666;margin-bottom:5px}
+.anomaly-values{display:flex;gap:14px;margin-bottom:5px;flex-wrap:wrap}
+.anomaly-val{font-size:12px;background:#f0f0f0;padding:2px 8px;border-radius:4px}
+.anomaly-val strong{color:#0066cc}
+.anomaly-explanation{font-size:12px;color:#374151;font-style:italic;line-height:1.5}
+.anomaly-recommendation{font-size:12px;color:#0066cc;font-weight:600;margin-top:4px}
+.anomaly-date{font-size:11px;color:#999;text-align:right;white-space:nowrap}
+.anomaly-empty{text-align:center;padding:30px;color:#999;font-size:15px}
+#anomaliesSection{background:#fff;border:2px solid #e0e0e0;border-radius:8px;padding:16px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.anomaly-threshold-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:#f8f9fa;border-radius:6px;font-size:13px}
+.anomaly-threshold-bar label{font-weight:700;color:#0066cc}
+.anomaly-threshold-bar input{width:70px;padding:4px 8px;border:2px solid #0066cc;border-radius:4px;font-size:13px;font-weight:700}
+@media(max-width:640px){
+  .anomalies-summary{grid-template-columns:1fr 1fr!important}
+  .anomaly-item{grid-template-columns:auto 1fr!important}
+  .anomaly-date{display:none}
+}
+</style></head><body><div class="container"><div class="header"><h1 id="dashboardTitle">📊 Dashboard KPI - France Routage - Juin 2026</h1><button class="print-btn no-print" onclick="smartPrint()">🖨️ Imprimer</button>
 <button class="print-btn no-print" onclick="lancerMiseAJour()" style="background:#28a745;margin-left:10px;">🔄 Mettre à jour</button></div><div class="filters no-print"><div class="filter-group" style="flex:2;min-width:200px;position:relative"><label>📁 Secteur</label><div style="display:none"><input type="checkbox" id="ck_RoutageGT" checked onchange="updateDashboard();loadComments();updatePerformanceTable();"><input type="checkbox" id="ck_Administratif" checked onchange="updateDashboard();loadComments();"><input type="checkbox" id="ck_RoutagePT" checked onchange="updateDashboard();loadComments();updatePerformanceTable();"><input type="checkbox" id="ck_Fabrication" checked onchange="updateDashboard();loadComments();"><input type="checkbox" id="ck_BrochageDCC" checked onchange="updateDashboard();loadComments();updatePerformanceTable();"><input type="checkbox" id="ck_Logistique" checked onchange="updateDashboard();loadComments();"><input type="checkbox" id="ck_BrochageDP" checked onchange="updateDashboard();loadComments();updatePerformanceTable();"><input type="checkbox" id="ck_Maintenance" checked onchange="updateDashboard();loadComments();"><input type="checkbox" id="ck_Sachet" checked onchange="updateDashboard();loadComments();"><input type="checkbox" id="ck_VPC" checked onchange="updateDashboard();loadComments();"></div><div style="position:relative"><button id="secteurDropdownBtn" onclick="toggleSecteurDropdown()" style="width:100%;padding:10px 14px;border:2px solid #06c;border-radius:6px;font-size:14px;font-weight:700;background:#fff;color:#06c;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px"><span id="secteurBtnLabel">🏭 Tous les secteurs</span><span id="secteurDropdownArrow" style="font-size:11px;transition:transform .2s">▼</span></button><div id="secteurDropdownMenu" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:2px solid #06c;border-top:none;border-radius:0 0 6px 6px;z-index:1000;box-shadow:0 4px 12px rgba(0,102,204,.15);max-height:320px;overflow-y:auto"><div style="padding:6px 10px;background:#f0f6ff;border-bottom:1px solid #d0e4ff;display:flex;gap:6px"><button onclick="selectAllSecteurs()" style="flex:1;padding:4px 8px;background:#06c;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer">✅ Tous</button><button onclick="selectNoneSecteurs()" style="flex:1;padding:4px 8px;background:#6c757d;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer">❌ Aucun</button></div><label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="vis_RoutageGT" checked onchange="syncSecteurCk('ck_RoutageGT',this);updateDashboard();loadComments();updatePerformanceTable();updateSecteurBtnLabel()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>🔷 Routage GT</span></label><label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="vis_Administratif" checked onchange="syncSecteurCk('ck_Administratif',this);updateDashboard();loadComments();updateSecteurBtnLabel()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>🏢 Administratif</span></label><label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="vis_RoutagePT" checked onchange="syncSecteurCk('ck_RoutagePT',this);updateDashboard();loadComments();updatePerformanceTable();updateSecteurBtnLabel()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>🔶 Routage PT</span></label><label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="vis_Fabrication" checked onchange="syncSecteurCk('ck_Fabrication',this);updateDashboard();loadComments();updateSecteurBtnLabel()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>🏭 Fabrication</span></label><label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="vis_BrochageDCC" checked onchange="syncSecteurCk('ck_BrochageDCC',this);updateDashboard();loadComments();updatePerformanceTable();updateSecteurBtnLabel()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>🟩 Brochage DCC</span></label><label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="vis_Logistique" checked onchange="syncSecteurCk('ck_Logistique',this);updateDashboard();loadComments();updateSecteurBtnLabel()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>🚛 Logistique</span></label><label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="vis_BrochageDP" checked onchange="syncSecteurCk('ck_BrochageDP',this);updateDashboard();loadComments();updatePerformanceTable();updateSecteurBtnLabel()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>🟪 Brochage DP</span></label><label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="vis_Maintenance" checked onchange="syncSecteurCk('ck_Maintenance',this);updateDashboard();loadComments();updateSecteurBtnLabel()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>🔧 Maintenance</span></label><label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="vis_Sachet" checked onchange="syncSecteurCk('ck_Sachet',this);updateDashboard();loadComments();updateSecteurBtnLabel()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>📦 Sachet</span></label><label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="vis_VPC" checked onchange="syncSecteurCk('ck_VPC',this);updateDashboard();loadComments();updateSecteurBtnLabel()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>🛒 VPC</span></label></div></div></div><div class="filter-group"><label>📅 Mois</label><div style="position:relative"><button id="moisDropdownBtn" onclick="toggleMoisDropdown()" style="width:100%;padding:10px 14px;border:2px solid #06c;border-radius:6px;font-size:14px;font-weight:700;background:#fff;color:#06c;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px"><span id="moisBtnLabel">📅 Janvier</span><span id="moisDropdownArrow" style="font-size:11px;transition:transform .2s">▼</span></button><div id="moisDropdownMenu" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:2px solid #06c;border-top:none;border-radius:0 0 6px 6px;z-index:1000;box-shadow:0 4px 12px rgba(0,102,204,.15);max-height:320px;overflow-y:auto"><div style="padding:6px 10px;background:#f0f6ff;border-bottom:1px solid #d0e4ff;display:flex;gap:6px"><button onclick="selectAllMois()" style="flex:1;padding:4px 8px;background:#06c;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer">✅ Tous</button><button onclick="selectNoneMois()" style="flex:1;padding:4px 8px;background:#6c757d;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer">❌ Aucun</button></div><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Janvier" checked onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Janvier</span></label><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Fevrier"  onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Février</span></label><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Mars"  onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Mars</span></label><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Avril"  onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Avril</span></label><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Mai"  onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Mai</span></label><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Juin"  onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Juin</span></label><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Juillet"  onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Juillet</span></label><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Aout"  onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Août</span></label><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Septembre"  onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Septembre</span></label><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Octobre"  onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Octobre</span></label><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Novembre"  onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Novembre</span></label><label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid #f0f0f0;transition:background .15s" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"><input type="checkbox" id="ck_mois_Decembre"  onchange="updateAllFromMois()" style="width:14px;height:14px;accent-color:#06c;cursor:pointer"><span>Décembre</span></label></div></div><select id="monthFilter" style="display:none"><option value="Janvier">Janvier</option></select></div><div class="filter-group"><label>📆 Année</label><select id="yearFilter"><option value="2026" selected>2026</option><option value="2025">2025</option><option value="2024">2024</option></select></div><div class="filter-group"><label>📊 Affichage</label><div style="display:flex;gap:15px;padding:8px 0"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:15px"><input type="checkbox" id="showProduction" checked="checked" onchange="updateDisplay()" style="width:16px;height:16px;cursor:pointer"><span style="font-weight:600">Production</span></label><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:15px"><input type="checkbox" id="showRH" checked="checked" onchange="updateDisplay()" style="width:16px;height:16px;cursor:pointer"><span style="font-weight:600">RH</span></label></div></div></div><div id="versionRH" style="position:relative" style="display:none"><div id="rhEnAttenteOverlay" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(248,250,255,0.97);z-index:10;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;border:2px dashed #b0c4de">
   <div style="font-size:48px;margin-bottom:12px">📋</div>
   <div style="font-size:20px;font-weight:700;color:#0066cc;margin-bottom:8px">Données RH <span id="rhEnAttenteYear"></span> — En attente</div>
@@ -222,7 +276,55 @@ Chart.register(monthBoundaryPlugin);
   <div style="margin-top:16px;padding:8px 18px;background:#e0edff;border-radius:8px;font-size:12px;color:#0055b3">
     📅 Dernière année : <strong><span id="prodEnAttenteLastYear"></span></strong>
   </div>
-</div><div class="section-frame"><div class="section-frame-label">⚙️ KPI Production</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px"><div class="chart-box" style="display:flex;flex-direction:column;height:440px"><div class="chart-title">💰 Coût pour mille exemplaires</div><div style="flex:1;position:relative"><canvas id="chartCout1000"></canvas></div></div><div class="chart-box" style="display:flex;flex-direction:column;height:440px"><div class="chart-title">⚡ Vitesse de production</div><div style="flex:1;position:relative"><canvas id="chartVitesse"></canvas></div></div><div class="chart-box" style="display:flex;flex-direction:column;height:440px"><div class="chart-title">📊 Productivité moyenne par conducteur</div><div style="flex:1;position:relative"><canvas id="chartProductivite"></canvas></div></div></div><div id="row2Grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px"><div id="hldChartsContainer" style="display:contents"></div><div class="chart-box" id="boxCobot" style="display:flex;flex-direction:column;height:330px"><div class="chart-title">🤖 Les cobots</div><div style="flex:1;position:relative"><canvas id="chartCobot"></canvas></div></div><div class="indicators-box" id="ligne2" style="display:flex;flex-direction:column;justify-content:center;padding:16px 20px"><div class="indicators-title" id="indicCompTitle">📊 Comparaison avec la période précédente</div><table class="indicators-table"><thead><tr><th>Indicateur</th><th style="text-align:right">Valeur</th><th id="thVarCol" style="text-align:right;font-size:14px">Variation vs période précédente</th></tr></thead><tbody><tr><td class="label-col">📦 Production (ex.)</td><td class="value-col" id="indProdTotal">0</td><td class="var-col" id="indProdVar">-</td></tr><tr><td class="label-col">⚡ Vitesse (ex./h)</td><td class="value-col" id="indVitesse">0</td><td class="var-col" id="indVitesseVar">-</td></tr><tr id="rowCobot" style="display:none"><td class="label-col">🤖 Cobots <span id="cobotLabelNote" style="font-size:10px;opacity:0.7;font-style:italic"></span></td><td class="value-col" id="indCobot">-</td><td class="var-col" id="indCobotVar">-</td></tr><tr><td class="label-col">💰 Coût / 1000 ex.</td><td class="value-col" id="indCout">0 €</td><td class="var-col" id="indCoutVar">-</td></tr><tr id="rowHLD" style="display:none"><td class="label-col">📋 Respect HLD <span id="hldLabelNote" style="font-size:10px;opacity:0.7;font-style:italic"></span></td><td class="value-col" id="indHLD">-</td><td class="var-col" id="indHLDVar">-</td></tr></tbody></table></div></div></div><div style="margin-top:20px;"><div style="background:linear-gradient(135deg,#06c 0,#004999 100%);color:#fff;padding:9px 14px;border-radius:6px;font-size:19px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:0.3px;box-shadow:0 2px 6px rgba(0,102,204,.25);">📈 Performance Opérationnelle par Secteur &amp; Synthèse Cumulative <span id="perfTitleYears">2024 vs 2025</span></div><div class="perf-table-wrapper" style="overflow-x:auto"><table class="perf-table"><thead><tr><th>SECTEUR</th><th>PRODUCTION<br/>(total ex.)</th><th>COÛT MOD (€)</th><th>HEURES MOD</th><th>VITESSE MOY.<br/>(ex./heure)</th><th>COÛT/1000 EX. (€)</th></tr></thead><tbody id="perfTableBody"><tr><td colspan="6" style="text-align:center;padding:24px;color:#888">Chargement des données...</td></tr></tbody></table></div><div style="margin-top:12px"><div id="comparisonCards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:16px"><div class="comparison-card"><div class="comparison-title">Production Totale (en milliers)</div><div class="comparison-values"><div class="year-value"><span id="prodYear1">2024</span> : <span id="prod2024">-</span></div><div class="year-value"><span id="prodYear2">2025</span> : <span id="prod2025">-</span></div></div><div class="evolution-badge" id="prodEvol">Calcul...</div></div><div class="comparison-card"><div class="comparison-title">Coût Total</div><div class="comparison-values"><div class="year-value"><span id="coutYear1">2024</span> : <span id="cout2024">-</span></div><div class="year-value"><span id="coutYear2">2025</span> : <span id="cout2025">-</span></div></div><div class="evolution-badge" id="coutEvol">Calcul...</div></div><div class="comparison-card"><div class="comparison-title">Heures MOD</div><div class="comparison-values"><div class="year-value"><span id="heuresYear1">2024</span> : <span id="heures2024">-</span></div><div class="year-value"><span id="heuresYear2">2025</span> : <span id="heures2025">-</span></div></div><div class="evolution-badge" id="heuresEvol">Calcul...</div></div></div></div><div class="comments-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="comments-title" style="margin-bottom:0">💬 Commentaires et Analyses Production</div><button onclick="saveProdComments()" style="padding:6px 14px;background:#06c;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">💾 Enregistrer</button></div><div id="saveMessageProd" style="display:none;padding:6px 12px;border-radius:4px;font-size:13px;margin-bottom:6px"></div><div id="prodCommentsDisplay" style="display:none;white-space:pre-wrap;font-size:13px;line-height:1.6;color:#333;padding:8px;border:1px solid #ddd;border-radius:4px;background:#f9f9f9"></div><textarea class="comment-textarea" id="prodComments" oninput="document.getElementById('prodCommentsDisplay').textContent=this.value"></textarea></div></div><script>
+</div><div class="section-frame"><div class="section-frame-label">⚙️ KPI Production</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px"><div class="chart-box" style="display:flex;flex-direction:column;height:440px"><div class="chart-title">💰 Coût pour mille exemplaires</div><div style="flex:1;position:relative"><canvas id="chartCout1000"></canvas></div></div><div class="chart-box" style="display:flex;flex-direction:column;height:440px"><div class="chart-title">⚡ Vitesse de production</div><div style="flex:1;position:relative"><canvas id="chartVitesse"></canvas></div></div><div class="chart-box" style="display:flex;flex-direction:column;height:440px"><div class="chart-title">📊 Productivité moyenne par conducteur</div><div style="flex:1;position:relative"><canvas id="chartProductivite"></canvas></div></div></div><div id="row2Grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px"><div id="hldChartsContainer" style="display:contents"></div><div class="chart-box" id="boxCobot" style="display:flex;flex-direction:column;height:330px"><div class="chart-title">🤖 Les cobots</div><div style="flex:1;position:relative"><canvas id="chartCobot"></canvas></div></div><div class="indicators-box" id="ligne2" style="display:flex;flex-direction:column;justify-content:center;padding:16px 20px"><div class="indicators-title" id="indicCompTitle">📊 Comparaison avec la période précédente</div><table class="indicators-table"><thead><tr><th>Indicateur</th><th style="text-align:right">Valeur</th><th id="thVarCol" style="text-align:right;font-size:14px">Variation vs période précédente</th></tr></thead><tbody><tr><td class="label-col">📦 Production (ex.)</td><td class="value-col" id="indProdTotal">0</td><td class="var-col" id="indProdVar">-</td></tr><tr><td class="label-col">⚡ Vitesse (ex./h)</td><td class="value-col" id="indVitesse">0</td><td class="var-col" id="indVitesseVar">-</td></tr><tr id="rowCobot" style="display:none"><td class="label-col">🤖 Cobots <span id="cobotLabelNote" style="font-size:10px;opacity:0.7;font-style:italic"></span></td><td class="value-col" id="indCobot">-</td><td class="var-col" id="indCobotVar">-</td></tr><tr><td class="label-col">💰 Coût / 1000 ex.</td><td class="value-col" id="indCout">0 €</td><td class="var-col" id="indCoutVar">-</td></tr><tr id="rowHLD" style="display:none"><td class="label-col">📋 Respect HLD <span id="hldLabelNote" style="font-size:10px;opacity:0.7;font-style:italic"></span></td><td class="value-col" id="indHLD">-</td><td class="var-col" id="indHLDVar">-</td></tr></tbody></table></div></div></div><div style="margin-top:20px;"><div style="background:linear-gradient(135deg,#06c 0,#004999 100%);color:#fff;padding:9px 14px;border-radius:6px;font-size:19px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:0.3px;box-shadow:0 2px 6px rgba(0,102,204,.25);">📈 Performance Opérationnelle par Secteur &amp; Synthèse Cumulative <span id="perfTitleYears">2024 vs 2025</span></div><div class="perf-table-wrapper" style="overflow-x:auto"><table class="perf-table"><thead><tr><th>SECTEUR</th><th>PRODUCTION<br/>(total ex.)</th><th>COÛT MOD (€)</th><th>HEURES MOD</th><th>VITESSE MOY.<br/>(ex./heure)</th><th>COÛT/1000 EX. (€)</th></tr></thead><tbody id="perfTableBody"><tr><td colspan="6" style="text-align:center;padding:24px;color:#888">Chargement des données...</td></tr></tbody></table></div><div style="margin-top:12px"><div id="comparisonCards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:16px"><div class="comparison-card"><div class="comparison-title">Production Totale (en milliers)</div><div class="comparison-values"><div class="year-value"><span id="prodYear1">2024</span> : <span id="prod2024">-</span></div><div class="year-value"><span id="prodYear2">2025</span> : <span id="prod2025">-</span></div></div><div class="evolution-badge" id="prodEvol">Calcul...</div></div><div class="comparison-card"><div class="comparison-title">Coût Total</div><div class="comparison-values"><div class="year-value"><span id="coutYear1">2024</span> : <span id="cout2024">-</span></div><div class="year-value"><span id="coutYear2">2025</span> : <span id="cout2025">-</span></div></div><div class="evolution-badge" id="coutEvol">Calcul...</div></div><div class="comparison-card"><div class="comparison-title">Heures MOD</div><div class="comparison-values"><div class="year-value"><span id="heuresYear1">2024</span> : <span id="heures2024">-</span></div><div class="year-value"><span id="heuresYear2">2025</span> : <span id="heures2025">-</span></div></div><div class="evolution-badge" id="heuresEvol">Calcul...</div></div></div></div><div class="comments-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="comments-title" style="margin-bottom:0">💬 Commentaires et Analyses Production</div><button onclick="saveProdComments()" style="padding:6px 14px;background:#06c;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">💾 Enregistrer</button></div><div id="saveMessageProd" style="display:none;padding:6px 12px;border-radius:4px;font-size:13px;margin-bottom:6px"></div><div id="prodCommentsDisplay" style="display:none;white-space:pre-wrap;font-size:13px;line-height:1.6;color:#333;padding:8px;border:1px solid #ddd;border-radius:4px;background:#f9f9f9"></div><textarea class="comment-textarea" id="prodComments" oninput="document.getElementById('prodCommentsDisplay').textContent=this.value"></textarea>
+<!-- ═══════════════════════════════════════
+     BLOC ANOMALIES INTELLIGENT
+═══════════════════════════════════════ -->
+<div id="anomaliesSection" class="no-print">
+  <div class="section-title">🔍 Anomalies Détectées — Analyse Intelligente</div>
+  <!-- Contrôles -->
+  <div class="anomaly-threshold-bar">
+    <label>Seuil variation (%) :</label>
+    <input type="number" id="anomalyThreshold" value="20" min="5" max="100" onchange="runAnomalyDetection()">
+    <span style="color:#666">Détection automatique sur les données de la période sélectionnée</span>
+    <button onclick="runAnomalyDetection()" style="margin-left:auto;padding:5px 14px;background:#0066cc;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">🔄 Recalculer</button>
+  </div>
+  <!-- Résumé -->
+  <div class="anomalies-summary">
+    <div class="anomaly-summary-card total">
+      <div class="anomaly-summary-num" id="anomCount">0</div>
+      <div class="anomaly-summary-label">Total anomalies</div>
+    </div>
+    <div class="anomaly-summary-card critical">
+      <div class="anomaly-summary-num" id="anomCritical">0</div>
+      <div class="anomaly-summary-label">🔴 Critiques</div>
+    </div>
+    <div class="anomaly-summary-card warning">
+      <div class="anomaly-summary-num" id="anomWarning">0</div>
+      <div class="anomaly-summary-label">🟠 Avertissements</div>
+    </div>
+    <div class="anomaly-summary-card info">
+      <div class="anomaly-summary-num" id="anomInfo">0</div>
+      <div class="anomaly-summary-label">🟢 Informations</div>
+    </div>
+    <div class="anomaly-summary-card trend">
+      <div class="anomaly-summary-num" id="anomTrend">—</div>
+      <div class="anomaly-summary-label">Tendance vs mois préc.</div>
+    </div>
+  </div>
+  <!-- Filtres -->
+  <div class="anomaly-filter-bar">
+    <button class="anomaly-filter-btn all active" onclick="filterAnomalies('all',this)">Toutes</button>
+    <button class="anomaly-filter-btn critical" onclick="filterAnomalies('critical',this)">🔴 Critiques</button>
+    <button class="anomaly-filter-btn warning" onclick="filterAnomalies('warning',this)">🟠 Avertissements</button>
+    <button class="anomaly-filter-btn info" onclick="filterAnomalies('info',this)">🟢 Informations</button>
+  </div>
+  <!-- Liste des anomalies -->
+  <div class="anomaly-list" id="anomalyList">
+    <div class="anomaly-empty">Cliquez sur Recalculer ou changez les filtres pour lancer la détection.</div>
+  </div>
+</div>
+</div></div><script>
 /* ══ Multi-mois: labels avec noms de mois et séparateurs ══ */
 function buildMultiMonthLabels(data){
   var result={labels:[],monthBoundaries:[]};
@@ -453,7 +555,7 @@ function updateDashboard(){const secteurs = getAllSelectedSecteurs();if(secteurs
       if(rhOverlay)rhOverlay.style.display='none';
       updateRHKPIs(filtered);updateRHCharts();loadComments();
     }}
-  cleanNaN();}function togglePeriode(){const type = document.querySelector('input[name="periodeType"]:checked').value;const monthGroup = document.getElementById('monthFilter').parentElement;const semaineGroup = document.getElementById('semaineFilterGroup');if(type==='mois'){monthGroup.style.display = 'block';semaineGroup.style.display = 'none';}else{monthGroup.style.display = 'none';semaineGroup.style.display = 'block';}updateDashboard();}function updateDisplay(){updateDashboard();}function updateRHKPIs(data){if(data.length===0)return;const _rhSecteurs = getAllSelectedSecteurs();const secteur = _rhSecteurs[0];const _selMois=getSelectedMois();const mois=_selMois[0];const annee = parseInt(document.getElementById('yearFilter').value);const months =['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];const currentMonthIndex = months.indexOf(mois);let prevMonthIndex = currentMonthIndex - 1;let prevYear = annee;if(prevMonthIndex < 0){prevMonthIndex = 11;prevYear-=1;}const prevMois = months[prevMonthIndex];const totalMS = data.reduce((s,d)=>s + d.Montant_MS,0);const totalInterim = data.reduce((s,d)=>s + d.Cout_interim,0);const totalETP = data.reduce((s,d)=>s + d.NB_ETP,0);document.getElementById('rhMS').textContent = (totalMS>0&&!isNaN(totalMS))?Math.round(totalMS).toLocaleString('fr-FR')+' €':'N/A';document.getElementById('rhInterim').textContent = (totalInterim>0&&!isNaN(totalInterim))?Math.round(totalInterim).toLocaleString('fr-FR')+' €':'N/A';document.getElementById('rhETP').textContent = (totalETP>0&&!isNaN(totalETP))?Math.round(totalETP):'N/A';const secteurs = getAllSelectedSecteurs();const prevData = DATA_RH.filter(d=>secteurs.includes(d.Secteur)&&d.Mois===prevMois&&d.Annee===prevYear);if(prevData.length > 0){const prevMS = prevData.reduce((s,d)=>s + d.Montant_MS,0);const prevInterim = prevData.reduce((s,d)=>s + d.Cout_interim,0);const prevETP = prevData.reduce((s,d)=>s + d.NB_ETP,0);const varMS = prevMS > 0 ?((totalMS / prevMS)- 1)* 100 :0;const varInterim = prevInterim > 0 ?((totalInterim / prevInterim)- 1)* 100 :0;const varETP = prevETP > 0 ?((totalETP / prevETP)- 1)* 100 :0;document.getElementById('rhMSVar').textContent = (prevMS>0&&!isNaN(prevMS))?`${varMS>=0?'▲':'▼'}${varMS>=0?'+':''}${varMS.toFixed(1)}%`:'N/A';document.getElementById('rhMSVar').className = `kpi-evolution ${varMS>=0 ? 'evolution-up' :'evolution-down'}`;document.getElementById('rhInterimVar').textContent = (prevInterim>0&&!isNaN(prevInterim))?`${varInterim>=0?'▲':'▼'}${varInterim>=0?'+':''}${varInterim.toFixed(1)}%`:'N/A';document.getElementById('rhInterimVar').className = `kpi-evolution ${varInterim>=0 ? 'evolution-up' :'evolution-down'}`;document.getElementById('rhETPVar').textContent = (prevETP>0&&!isNaN(prevETP))?`${varETP>=0?'▲':'▼'}${varETP>=0?'+':''}${varETP.toFixed(1)}%`:'N/A';document.getElementById('rhETPVar').className = `kpi-evolution ${varETP>=0 ? 'evolution-up' :'evolution-down'}`;let commentMS = '';if(varMS > 10){commentMS = `⚠️ Hausse significative de ${varMS.toFixed(1)}%. Analyse recommandée :vérifier les recrutements,heures supplémentaires et augmentations salariales.`;}else if(varMS > 5){commentMS = `↗ Hausse modérée de ${varMS.toFixed(1)}%. Surveiller l'évolution et valider la cohérence avec les effectifs.`;}else if(varMS > 0){commentMS = `→ Légère hausse de ${varMS.toFixed(1)}%. Evolution normale dans la fourchette attendue.`;}else if(varMS > -5){commentMS = `→ Légère baisse de ${Math.abs(varMS).toFixed(1)}%. Evolution stable.`;}else if(varMS > -10){commentMS = `↘ Baisse modérée de ${Math.abs(varMS).toFixed(1)}%. Vérifier si liée à des départs ou réduction d'heures.`;}else{commentMS = `✓ Baisse significative de ${Math.abs(varMS).toFixed(1)}%. Optimisation réussie ou impact départs non remplacés.`;}document.getElementById('commentMS').textContent = commentMS;let commentInterim = '';if(varInterim > 15){commentInterim = `⚠️ Forte hausse de ${varInterim.toFixed(1)}%. Action requise :analyser les besoins en intérim et envisager des recrutements permanents pour réduire les coûts.`;}else if(varInterim > 5){commentInterim = `↗ Hausse de ${varInterim.toFixed(1)}%. Augmentation du recours à l'intérim,à surveiller pour optimiser les coûts.`;}else if(varInterim > 0){commentInterim = `→ Légère hausse de ${varInterim.toFixed(1)}%. Evolution dans la norme.`;}else if(varInterim > -10){commentInterim = `↘ Baisse de ${Math.abs(varInterim).toFixed(1)}%. Bonne tendance,maintenir cette réduction.`;}else{commentInterim = `✓ Excellente baisse de ${Math.abs(varInterim).toFixed(1)}%. Optimisation réussie du recours à l'intérim. Fidélisation des équipes permanentes efficace.`;}document.getElementById('commentInterim').textContent = commentInterim;let commentETP = '';if(varETP > 10){commentETP = `↗ Forte hausse de ${varETP.toFixed(1)}%. Augmentation importante des effectifs,vérifier la cohérence avec les besoins et la productivité.`;}else if(varETP > 3){commentETP = `↗ Hausse de ${varETP.toFixed(1)}%. Renforcement des équipes,suivre l'impact sur la performance.`;}else if(varETP > 0){commentETP = `→ Légère hausse de ${varETP.toFixed(1)}%. Ajustement normal des effectifs.`;}else if(varETP > -5){commentETP = `↘ Légère baisse de ${Math.abs(varETP).toFixed(1)}%. Ajustement des effectifs.`;}else{commentETP = `↘ Baisse de ${Math.abs(varETP).toFixed(1)}%. Réduction des effectifs,vérifier l'impact sur la capacité de production.`;}document.getElementById('commentETP').textContent = commentETP;
+  cleanNaN(); try{runAnomalyDetection();}catch(e){} }function togglePeriode(){const type = document.querySelector('input[name="periodeType"]:checked').value;const monthGroup = document.getElementById('monthFilter').parentElement;const semaineGroup = document.getElementById('semaineFilterGroup');if(type==='mois'){monthGroup.style.display = 'block';semaineGroup.style.display = 'none';}else{monthGroup.style.display = 'none';semaineGroup.style.display = 'block';}updateDashboard();}function updateDisplay(){updateDashboard();}function updateRHKPIs(data){if(data.length===0)return;const _rhSecteurs = getAllSelectedSecteurs();const secteur = _rhSecteurs[0];const _selMois=getSelectedMois();const mois=_selMois[0];const annee = parseInt(document.getElementById('yearFilter').value);const months =['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];const currentMonthIndex = months.indexOf(mois);let prevMonthIndex = currentMonthIndex - 1;let prevYear = annee;if(prevMonthIndex < 0){prevMonthIndex = 11;prevYear-=1;}const prevMois = months[prevMonthIndex];const totalMS = data.reduce((s,d)=>s + d.Montant_MS,0);const totalInterim = data.reduce((s,d)=>s + d.Cout_interim,0);const totalETP = data.reduce((s,d)=>s + d.NB_ETP,0);document.getElementById('rhMS').textContent = (totalMS>0&&!isNaN(totalMS))?Math.round(totalMS).toLocaleString('fr-FR')+' €':'N/A';document.getElementById('rhInterim').textContent = (totalInterim>0&&!isNaN(totalInterim))?Math.round(totalInterim).toLocaleString('fr-FR')+' €':'N/A';document.getElementById('rhETP').textContent = (totalETP>0&&!isNaN(totalETP))?Math.round(totalETP):'N/A';const secteurs = getAllSelectedSecteurs();const prevData = DATA_RH.filter(d=>secteurs.includes(d.Secteur)&&d.Mois===prevMois&&d.Annee===prevYear);if(prevData.length > 0){const prevMS = prevData.reduce((s,d)=>s + d.Montant_MS,0);const prevInterim = prevData.reduce((s,d)=>s + d.Cout_interim,0);const prevETP = prevData.reduce((s,d)=>s + d.NB_ETP,0);const varMS = prevMS > 0 ?((totalMS / prevMS)- 1)* 100 :0;const varInterim = prevInterim > 0 ?((totalInterim / prevInterim)- 1)* 100 :0;const varETP = prevETP > 0 ?((totalETP / prevETP)- 1)* 100 :0;document.getElementById('rhMSVar').textContent = (prevMS>0&&!isNaN(prevMS))?`${varMS>=0?'▲':'▼'}${varMS>=0?'+':''}${varMS.toFixed(1)}%`:'N/A';document.getElementById('rhMSVar').className = `kpi-evolution ${varMS>=0 ? 'evolution-up' :'evolution-down'}`;document.getElementById('rhInterimVar').textContent = (prevInterim>0&&!isNaN(prevInterim))?`${varInterim>=0?'▲':'▼'}${varInterim>=0?'+':''}${varInterim.toFixed(1)}%`:'N/A';document.getElementById('rhInterimVar').className = `kpi-evolution ${varInterim>=0 ? 'evolution-up' :'evolution-down'}`;document.getElementById('rhETPVar').textContent = (prevETP>0&&!isNaN(prevETP))?`${varETP>=0?'▲':'▼'}${varETP>=0?'+':''}${varETP.toFixed(1)}%`:'N/A';document.getElementById('rhETPVar').className = `kpi-evolution ${varETP>=0 ? 'evolution-up' :'evolution-down'}`;let commentMS = '';if(varMS > 10){commentMS = `⚠️ Hausse significative de ${varMS.toFixed(1)}%. Analyse recommandée :vérifier les recrutements,heures supplémentaires et augmentations salariales.`;}else if(varMS > 5){commentMS = `↗ Hausse modérée de ${varMS.toFixed(1)}%. Surveiller l'évolution et valider la cohérence avec les effectifs.`;}else if(varMS > 0){commentMS = `→ Légère hausse de ${varMS.toFixed(1)}%. Evolution normale dans la fourchette attendue.`;}else if(varMS > -5){commentMS = `→ Légère baisse de ${Math.abs(varMS).toFixed(1)}%. Evolution stable.`;}else if(varMS > -10){commentMS = `↘ Baisse modérée de ${Math.abs(varMS).toFixed(1)}%. Vérifier si liée à des départs ou réduction d'heures.`;}else{commentMS = `✓ Baisse significative de ${Math.abs(varMS).toFixed(1)}%. Optimisation réussie ou impact départs non remplacés.`;}document.getElementById('commentMS').textContent = commentMS;let commentInterim = '';if(varInterim > 15){commentInterim = `⚠️ Forte hausse de ${varInterim.toFixed(1)}%. Action requise :analyser les besoins en intérim et envisager des recrutements permanents pour réduire les coûts.`;}else if(varInterim > 5){commentInterim = `↗ Hausse de ${varInterim.toFixed(1)}%. Augmentation du recours à l'intérim,à surveiller pour optimiser les coûts.`;}else if(varInterim > 0){commentInterim = `→ Légère hausse de ${varInterim.toFixed(1)}%. Evolution dans la norme.`;}else if(varInterim > -10){commentInterim = `↘ Baisse de ${Math.abs(varInterim).toFixed(1)}%. Bonne tendance,maintenir cette réduction.`;}else{commentInterim = `✓ Excellente baisse de ${Math.abs(varInterim).toFixed(1)}%. Optimisation réussie du recours à l'intérim. Fidélisation des équipes permanentes efficace.`;}document.getElementById('commentInterim').textContent = commentInterim;let commentETP = '';if(varETP > 10){commentETP = `↗ Forte hausse de ${varETP.toFixed(1)}%. Augmentation importante des effectifs,vérifier la cohérence avec les besoins et la productivité.`;}else if(varETP > 3){commentETP = `↗ Hausse de ${varETP.toFixed(1)}%. Renforcement des équipes,suivre l'impact sur la performance.`;}else if(varETP > 0){commentETP = `→ Légère hausse de ${varETP.toFixed(1)}%. Ajustement normal des effectifs.`;}else if(varETP > -5){commentETP = `↘ Légère baisse de ${Math.abs(varETP).toFixed(1)}%. Ajustement des effectifs.`;}else{commentETP = `↘ Baisse de ${Math.abs(varETP).toFixed(1)}%. Réduction des effectifs,vérifier l'impact sur la capacité de production.`;}document.getElementById('commentETP').textContent = commentETP;
   // Load saved KPI comments (user overrides)
   var _kpiSecteurs = getAllSelectedSecteurs();
   var _kpiMois = document.getElementById('monthFilter').value;
@@ -838,7 +940,7 @@ function saveComments(){
     document.getElementById('prodComments').value=savedProd;
     document.getElementById('prodCommentsDisplay').textContent=savedProd;
   }
-}document.getElementById('monthFilter').addEventListener('change',loadComments);document.getElementById('yearFilter').addEventListener('change',loadComments);window.addEventListener('load',()=>{populateYearFilter();updateDashboard();setTimeout(loadComments,500);});function getCurrentMainSecteur(){const all10 =['ck_RoutageGT','ck_RoutagePT','ck_BrochageDCC','ck_BrochageDP','ck_Administratif','ck_Fabrication','ck_Logistique','ck_Maintenance','ck_Sachet','ck_VPC'];const names ={'ck_RoutageGT':'Routage GT','ck_RoutagePT':'Routage PT','ck_BrochageDCC':'Brochage DCC','ck_BrochageDP':'Brochage DP','ck_Administratif':'Administratif','ck_Fabrication':'Fabrication','ck_Logistique':'Logistique','ck_Maintenance':'Maintenance','ck_Sachet':'Sachet','ck_VPC':'VPC'};for(const id of all10){const el = document.getElementById(id);if(el&&el.checked)return names[id];}return 'Routage GT';}function getSelectedSecteurs(){const map ={'ck_RoutageGT':'Routage GT','ck_RoutagePT':'Routage PT','ck_BrochageDCC':'Brochage DCC','ck_BrochageDP':'Brochage DP'};const selected =[];for(const[id,name]of Object.entries(map)){const el = document.getElementById(id);if(el&&el.checked)selected.push(name);}return selected.length > 0 ? selected :['Routage GT','Routage PT','Brochage DCC','Brochage DP'];}function toggleSecteurDropdown(){const menu = document.getElementById('secteurDropdownMenu');const arrow = document.getElementById('secteurDropdownArrow');const isOpen = menu.style.display!=='none';menu.style.display = isOpen ? 'none' :'block';arrow.style.transform = isOpen ? '' :'rotate(180deg)';}document.addEventListener('click',function(e){const btn = document.getElementById('secteurDropdownBtn');const menu = document.getElementById('secteurDropdownMenu');if(btn&&menu&&!btn.contains(e.target)&&!menu.contains(e.target)){menu.style.display = 'none';const arrow = document.getElementById('secteurDropdownArrow');if(arrow)arrow.style.transform = '';}});function syncSecteurCk(hiddenId,visCheckbox){const hidden = document.getElementById(hiddenId);if(hidden)hidden.checked = visCheckbox.checked;}function updateSecteurBtnLabel(){const ids =['vis_RoutageGT','vis_RoutagePT','vis_BrochageDCC','vis_BrochageDP','vis_Administratif','vis_Fabrication','vis_Logistique','vis_Maintenance','vis_Sachet','vis_VPC'];const labels ={'vis_RoutageGT':'🔷 Routage GT','vis_Administratif':'🏢 Administratif','vis_RoutagePT':'🔶 Routage PT','vis_Fabrication':'🏭 Fabrication','vis_BrochageDCC':'🟩 Brochage DCC','vis_Logistique':'🚛 Logistique','vis_BrochageDP':'🟪 Brochage DP','vis_Maintenance':'🔧 Maintenance','vis_Sachet':'📦 Sachet','vis_VPC':'🛒 VPC'};const checked = ids.filter(id=>{const el = document.getElementById(id);return el&&el.checked;});const lbl = document.getElementById('secteurBtnLabel');if(!lbl)return;if(checked.length===0)lbl.textContent = '⬜ Aucun secteur';else if(checked.length===ids.length)lbl.textContent = '🏭 Tous les secteurs';else if(checked.length===1)lbl.textContent = labels[checked[0]]||'1 secteur';else lbl.textContent = `🏭 ${checked.length}secteurs sélectionnés`;}function selectAllSecteurs(){['ck_RoutageGT','ck_RoutagePT','ck_BrochageDCC','ck_BrochageDP','ck_Administratif','ck_Fabrication','ck_Logistique','ck_Maintenance','ck_Sachet','ck_VPC'].forEach(id=>{const el = document.getElementById(id);if(el)el.checked=true;});['vis_RoutageGT','vis_RoutagePT','vis_BrochageDCC','vis_BrochageDP','vis_Administratif','vis_Fabrication','vis_Logistique','vis_Maintenance','vis_Sachet','vis_VPC'].forEach(id=>{const el = document.getElementById(id);if(el)el.checked=true;});updateSecteurBtnLabel();updateDashboard();loadComments();updatePerformanceTable();}function selectNoneSecteurs(){['ck_RoutageGT','ck_RoutagePT','ck_BrochageDCC','ck_BrochageDP','ck_Administratif','ck_Fabrication','ck_Logistique','ck_Maintenance','ck_Sachet','ck_VPC'].forEach(id=>{const el = document.getElementById(id);if(el)el.checked=false;});['vis_RoutageGT','vis_RoutagePT','vis_BrochageDCC','vis_BrochageDP','vis_Administratif','vis_Fabrication','vis_Logistique','vis_Maintenance','vis_Sachet','vis_VPC'].forEach(id=>{const el = document.getElementById(id);if(el)el.checked=false;});updateSecteurBtnLabel();updateDashboard();loadComments();updatePerformanceTable();}function updatePerformanceTable(){const secteurs = getAllSelectedSecteurs();if(secteurs.length===0){document.getElementById('perfTableBody').innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:#999;">Aucun secteur sélectionné</td></tr>';return;}const _selMois=getSelectedMois();const mois=_selMois[0];const annee = parseInt(document.getElementById('yearFilter').value);var moisIdx=MOIS_ORDRE.indexOf(mois);let filtered = DATA_PRODUCTION.filter(d=>d.Annee===annee&&MOIS_ORDRE.indexOf(d.Mois)<=moisIdx);const tbody = document.getElementById('perfTableBody');tbody.innerHTML = '';secteurs.forEach(s=>{const data = filtered.filter(d=>d.Secteur===s);if(data.length===0||!data.some(function(d){return !isNaN(d.Prod_Globale)&&d.Prod_Globale>0;})){const tr=document.createElement('tr');tr.innerHTML=`<td><strong>${s}</strong></td><td colspan="5" style="text-align:center;color:#999;font-style:italic">N/A — Données insuffisantes</td>`;tbody.appendChild(tr);return;}const totalProd = data.reduce((sum,d)=>sum + d.Prod_Globale,0);const totalCout = data.reduce((sum,d)=>sum + d.Cout_total,0);const totalHeures = data.reduce((sum,d)=>sum + d.MOD_heures_travaillees,0);const _vitRows = data.filter(d=>!isNaN(d.Vit_prod)&&d.Vit_prod>0);const vitesseMoy = _vitRows.length>0 ? _vitRows.reduce((s,d)=>s+d.Vit_prod,0)/_vitRows.length : 0;const coutPour1000 = totalProd > 0 ?(totalCout /(totalProd / 1000)):0;const anneePrec = annee - 1;let dataPrec = DATA_PRODUCTION.filter(d=>d.Secteur===s&&d.Annee===anneePrec&&MOIS_ORDRE.indexOf(d.Mois)<=moisIdx);const totalProdPrec = dataPrec.reduce((sum,d)=>sum + d.Prod_Globale,0);const evolution = totalProdPrec > 0 ?((totalProd - totalProdPrec)/ totalProdPrec * 100):0;const tr = document.createElement('tr');tr.innerHTML = `<td><strong>${s}</strong></td><td>${(totalProd>0&&!isNaN(totalProd))?Math.round(totalProd).toLocaleString('fr-FR'):'N/A'}</td><td>${(totalCout>0&&!isNaN(totalCout))?Math.round(totalCout).toLocaleString('fr-FR')+' €':'N/A'}</td><td>${(totalHeures>0&&!isNaN(totalHeures))?Math.round(totalHeures).toLocaleString('fr-FR')+' h':'N/A'}</td><td>${(vitesseMoy>0)?Math.round(vitesseMoy*1000).toLocaleString('fr-FR'):'N/A'}</td><td>${(coutPour1000>0)?coutPour1000.toFixed(2)+' €':'N/A'}</td>`;tbody.appendChild(tr);});updateYearComparison(secteurs);}function updateYearComparison(secteurs){const annee=parseInt(document.getElementById('yearFilter').value);const anneeN1=annee-1;var titleEl=document.getElementById('perfTitleYears');var _moisSel3=getSelectedMois();if(titleEl)titleEl.textContent=(_moisSel3.length===1?_moisSel3[0]:_moisSel3[0]+' à '+_moisSel3[_moisSel3.length-1])+' — '+anneeN1+' vs '+annee;['prodYear1','coutYear1','heuresYear1'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=anneeN1;});['prodYear2','coutYear2','heuresYear2'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=annee;});var _moisSel2=getSelectedMois();const data2024 = DATA_PRODUCTION.filter(d=>d.Annee===anneeN1&&secteurs.includes(d.Secteur)&&_moisSel2.includes(d.Mois));const data2025 = DATA_PRODUCTION.filter(d=>d.Annee===annee&&secteurs.includes(d.Secteur)&&_moisSel2.includes(d.Mois));const prod2024 = data2024.reduce((sum,d)=>sum + d.Prod_Globale,0);const prod2025 = data2025.reduce((sum,d)=>sum + d.Prod_Globale,0);const prodEvol = prod2024 > 0 ?((prod2025 - prod2024)/ prod2024 * 100):0;document.getElementById('prod2024').textContent =(prod2024>0&&!isNaN(prod2024))?Math.round(prod2024/1000).toLocaleString('fr-FR')+' k':'N/A';document.getElementById('prod2025').textContent =(prod2025>0&&!isNaN(prod2025))?Math.round(prod2025/1000).toLocaleString('fr-FR')+' k':'N/A';const prodBadge = document.getElementById('prodEvol');prodBadge.textContent =(prod2024>0&&prod2025>0)?(prodEvol>=0?'↗ +':'↘ ')+prodEvol.toFixed(1)+'%':'N/A';prodBadge.className = 'evolution-badge ' +((prod2024<=0||prod2025<=0)?'neutral':prodEvol>=5?'positive':prodEvol<=-5?'negative':'neutral');const cout2024 = data2024.reduce((sum,d)=>sum + (isNaN(d.Cout_total)?0:d.Cout_total),0);const cout2025 = data2025.reduce((sum,d)=>sum + (isNaN(d.Cout_total)?0:d.Cout_total),0);const coutEvol = cout2024 > 0 ?((cout2025 - cout2024)/ cout2024 * 100):0;document.getElementById('cout2024').textContent =(cout2024>0&&!isNaN(cout2024))?Math.round(cout2024/1000).toLocaleString('fr-FR')+' k€':'N/A';document.getElementById('cout2025').textContent =(cout2025>0&&!isNaN(cout2025))?Math.round(cout2025/1000).toLocaleString('fr-FR')+' k€':'N/A';const coutBadge = document.getElementById('coutEvol');coutBadge.textContent =(cout2024>0&&cout2025>0)?(coutEvol>=0?'↗ +':'↘ ')+coutEvol.toFixed(1)+'%':'N/A';coutBadge.className = 'evolution-badge ' +((cout2024<=0||cout2025<=0)?'neutral':coutEvol>=5?'negative':coutEvol<=-5?'positive':'neutral');const heures2024 = data2024.reduce((sum,d)=>sum + d.MOD_heures_travaillees,0);const heures2025 = data2025.reduce((sum,d)=>sum + d.MOD_heures_travaillees,0);const heuresEvol = heures2024 > 0 ?((heures2025 - heures2024)/ heures2024 * 100):0;document.getElementById('heures2024').textContent =(heures2024>0&&!isNaN(heures2024))?Math.round(heures2024).toLocaleString('fr-FR')+' h':'N/A';document.getElementById('heures2025').textContent =(heures2025>0&&!isNaN(heures2025))?Math.round(heures2025).toLocaleString('fr-FR')+' h':'N/A';const heuresBadge = document.getElementById('heuresEvol');heuresBadge.textContent =(heures2024>0&&heures2025>0)?(heuresEvol>=0?'↗ +':'↘ ')+heuresEvol.toFixed(1)+'%':'N/A';heuresBadge.className = 'evolution-badge ' +((heures2024<=0||heures2025<=0)?'neutral':heuresEvol>=5?'negative':heuresEvol<=-5?'positive':'neutral');
+}document.getElementById('monthFilter').addEventListener('change',loadComments);document.getElementById('yearFilter').addEventListener('change',loadComments);window.addEventListener('load',()=>{populateYearFilter();updateDashboard();setTimeout(loadComments,500);setTimeout(runAnomalyDetection,800);});function getCurrentMainSecteur(){const all10 =['ck_RoutageGT','ck_RoutagePT','ck_BrochageDCC','ck_BrochageDP','ck_Administratif','ck_Fabrication','ck_Logistique','ck_Maintenance','ck_Sachet','ck_VPC'];const names ={'ck_RoutageGT':'Routage GT','ck_RoutagePT':'Routage PT','ck_BrochageDCC':'Brochage DCC','ck_BrochageDP':'Brochage DP','ck_Administratif':'Administratif','ck_Fabrication':'Fabrication','ck_Logistique':'Logistique','ck_Maintenance':'Maintenance','ck_Sachet':'Sachet','ck_VPC':'VPC'};for(const id of all10){const el = document.getElementById(id);if(el&&el.checked)return names[id];}return 'Routage GT';}function getSelectedSecteurs(){const map ={'ck_RoutageGT':'Routage GT','ck_RoutagePT':'Routage PT','ck_BrochageDCC':'Brochage DCC','ck_BrochageDP':'Brochage DP'};const selected =[];for(const[id,name]of Object.entries(map)){const el = document.getElementById(id);if(el&&el.checked)selected.push(name);}return selected.length > 0 ? selected :['Routage GT','Routage PT','Brochage DCC','Brochage DP'];}function toggleSecteurDropdown(){const menu = document.getElementById('secteurDropdownMenu');const arrow = document.getElementById('secteurDropdownArrow');const isOpen = menu.style.display!=='none';menu.style.display = isOpen ? 'none' :'block';arrow.style.transform = isOpen ? '' :'rotate(180deg)';}document.addEventListener('click',function(e){const btn = document.getElementById('secteurDropdownBtn');const menu = document.getElementById('secteurDropdownMenu');if(btn&&menu&&!btn.contains(e.target)&&!menu.contains(e.target)){menu.style.display = 'none';const arrow = document.getElementById('secteurDropdownArrow');if(arrow)arrow.style.transform = '';}});function syncSecteurCk(hiddenId,visCheckbox){const hidden = document.getElementById(hiddenId);if(hidden)hidden.checked = visCheckbox.checked;}function updateSecteurBtnLabel(){const ids =['vis_RoutageGT','vis_RoutagePT','vis_BrochageDCC','vis_BrochageDP','vis_Administratif','vis_Fabrication','vis_Logistique','vis_Maintenance','vis_Sachet','vis_VPC'];const labels ={'vis_RoutageGT':'🔷 Routage GT','vis_Administratif':'🏢 Administratif','vis_RoutagePT':'🔶 Routage PT','vis_Fabrication':'🏭 Fabrication','vis_BrochageDCC':'🟩 Brochage DCC','vis_Logistique':'🚛 Logistique','vis_BrochageDP':'🟪 Brochage DP','vis_Maintenance':'🔧 Maintenance','vis_Sachet':'📦 Sachet','vis_VPC':'🛒 VPC'};const checked = ids.filter(id=>{const el = document.getElementById(id);return el&&el.checked;});const lbl = document.getElementById('secteurBtnLabel');if(!lbl)return;if(checked.length===0)lbl.textContent = '⬜ Aucun secteur';else if(checked.length===ids.length)lbl.textContent = '🏭 Tous les secteurs';else if(checked.length===1)lbl.textContent = labels[checked[0]]||'1 secteur';else lbl.textContent = `🏭 ${checked.length}secteurs sélectionnés`;}function selectAllSecteurs(){['ck_RoutageGT','ck_RoutagePT','ck_BrochageDCC','ck_BrochageDP','ck_Administratif','ck_Fabrication','ck_Logistique','ck_Maintenance','ck_Sachet','ck_VPC'].forEach(id=>{const el = document.getElementById(id);if(el)el.checked=true;});['vis_RoutageGT','vis_RoutagePT','vis_BrochageDCC','vis_BrochageDP','vis_Administratif','vis_Fabrication','vis_Logistique','vis_Maintenance','vis_Sachet','vis_VPC'].forEach(id=>{const el = document.getElementById(id);if(el)el.checked=true;});updateSecteurBtnLabel();updateDashboard();loadComments();updatePerformanceTable();}function selectNoneSecteurs(){['ck_RoutageGT','ck_RoutagePT','ck_BrochageDCC','ck_BrochageDP','ck_Administratif','ck_Fabrication','ck_Logistique','ck_Maintenance','ck_Sachet','ck_VPC'].forEach(id=>{const el = document.getElementById(id);if(el)el.checked=false;});['vis_RoutageGT','vis_RoutagePT','vis_BrochageDCC','vis_BrochageDP','vis_Administratif','vis_Fabrication','vis_Logistique','vis_Maintenance','vis_Sachet','vis_VPC'].forEach(id=>{const el = document.getElementById(id);if(el)el.checked=false;});updateSecteurBtnLabel();updateDashboard();loadComments();updatePerformanceTable();}function updatePerformanceTable(){const secteurs = getAllSelectedSecteurs();if(secteurs.length===0){document.getElementById('perfTableBody').innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:#999;">Aucun secteur sélectionné</td></tr>';return;}const _selMois=getSelectedMois();const mois=_selMois[0];const annee = parseInt(document.getElementById('yearFilter').value);var moisIdx=MOIS_ORDRE.indexOf(mois);let filtered = DATA_PRODUCTION.filter(d=>d.Annee===annee&&MOIS_ORDRE.indexOf(d.Mois)<=moisIdx);const tbody = document.getElementById('perfTableBody');tbody.innerHTML = '';secteurs.forEach(s=>{const data = filtered.filter(d=>d.Secteur===s);if(data.length===0||!data.some(function(d){return !isNaN(d.Prod_Globale)&&d.Prod_Globale>0;})){const tr=document.createElement('tr');tr.innerHTML=`<td><strong>${s}</strong></td><td colspan="5" style="text-align:center;color:#999;font-style:italic">N/A — Données insuffisantes</td>`;tbody.appendChild(tr);return;}const totalProd = data.reduce((sum,d)=>sum + d.Prod_Globale,0);const totalCout = data.reduce((sum,d)=>sum + d.Cout_total,0);const totalHeures = data.reduce((sum,d)=>sum + d.MOD_heures_travaillees,0);const _vitRows = data.filter(d=>!isNaN(d.Vit_prod)&&d.Vit_prod>0);const vitesseMoy = _vitRows.length>0 ? _vitRows.reduce((s,d)=>s+d.Vit_prod,0)/_vitRows.length : 0;const coutPour1000 = totalProd > 0 ?(totalCout /(totalProd / 1000)):0;const anneePrec = annee - 1;let dataPrec = DATA_PRODUCTION.filter(d=>d.Secteur===s&&d.Annee===anneePrec&&MOIS_ORDRE.indexOf(d.Mois)<=moisIdx);const totalProdPrec = dataPrec.reduce((sum,d)=>sum + d.Prod_Globale,0);const evolution = totalProdPrec > 0 ?((totalProd - totalProdPrec)/ totalProdPrec * 100):0;const tr = document.createElement('tr');tr.innerHTML = `<td><strong>${s}</strong></td><td>${(totalProd>0&&!isNaN(totalProd))?Math.round(totalProd).toLocaleString('fr-FR'):'N/A'}</td><td>${(totalCout>0&&!isNaN(totalCout))?Math.round(totalCout).toLocaleString('fr-FR')+' €':'N/A'}</td><td>${(totalHeures>0&&!isNaN(totalHeures))?Math.round(totalHeures).toLocaleString('fr-FR')+' h':'N/A'}</td><td>${(vitesseMoy>0)?Math.round(vitesseMoy*1000).toLocaleString('fr-FR'):'N/A'}</td><td>${(coutPour1000>0)?coutPour1000.toFixed(2)+' €':'N/A'}</td>`;tbody.appendChild(tr);});updateYearComparison(secteurs);}function updateYearComparison(secteurs){const annee=parseInt(document.getElementById('yearFilter').value);const anneeN1=annee-1;var titleEl=document.getElementById('perfTitleYears');var _moisSel3=getSelectedMois();if(titleEl)titleEl.textContent=(_moisSel3.length===1?_moisSel3[0]:_moisSel3[0]+' à '+_moisSel3[_moisSel3.length-1])+' — '+anneeN1+' vs '+annee;['prodYear1','coutYear1','heuresYear1'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=anneeN1;});['prodYear2','coutYear2','heuresYear2'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=annee;});var _moisSel2=getSelectedMois();const data2024 = DATA_PRODUCTION.filter(d=>d.Annee===anneeN1&&secteurs.includes(d.Secteur)&&_moisSel2.includes(d.Mois));const data2025 = DATA_PRODUCTION.filter(d=>d.Annee===annee&&secteurs.includes(d.Secteur)&&_moisSel2.includes(d.Mois));const prod2024 = data2024.reduce((sum,d)=>sum + d.Prod_Globale,0);const prod2025 = data2025.reduce((sum,d)=>sum + d.Prod_Globale,0);const prodEvol = prod2024 > 0 ?((prod2025 - prod2024)/ prod2024 * 100):0;document.getElementById('prod2024').textContent =(prod2024>0&&!isNaN(prod2024))?Math.round(prod2024/1000).toLocaleString('fr-FR')+' k':'N/A';document.getElementById('prod2025').textContent =(prod2025>0&&!isNaN(prod2025))?Math.round(prod2025/1000).toLocaleString('fr-FR')+' k':'N/A';const prodBadge = document.getElementById('prodEvol');prodBadge.textContent =(prod2024>0&&prod2025>0)?(prodEvol>=0?'↗ +':'↘ ')+prodEvol.toFixed(1)+'%':'N/A';prodBadge.className = 'evolution-badge ' +((prod2024<=0||prod2025<=0)?'neutral':prodEvol>=5?'positive':prodEvol<=-5?'negative':'neutral');const cout2024 = data2024.reduce((sum,d)=>sum + (isNaN(d.Cout_total)?0:d.Cout_total),0);const cout2025 = data2025.reduce((sum,d)=>sum + (isNaN(d.Cout_total)?0:d.Cout_total),0);const coutEvol = cout2024 > 0 ?((cout2025 - cout2024)/ cout2024 * 100):0;document.getElementById('cout2024').textContent =(cout2024>0&&!isNaN(cout2024))?Math.round(cout2024/1000).toLocaleString('fr-FR')+' k€':'N/A';document.getElementById('cout2025').textContent =(cout2025>0&&!isNaN(cout2025))?Math.round(cout2025/1000).toLocaleString('fr-FR')+' k€':'N/A';const coutBadge = document.getElementById('coutEvol');coutBadge.textContent =(cout2024>0&&cout2025>0)?(coutEvol>=0?'↗ +':'↘ ')+coutEvol.toFixed(1)+'%':'N/A';coutBadge.className = 'evolution-badge ' +((cout2024<=0||cout2025<=0)?'neutral':coutEvol>=5?'negative':coutEvol<=-5?'positive':'neutral');const heures2024 = data2024.reduce((sum,d)=>sum + d.MOD_heures_travaillees,0);const heures2025 = data2025.reduce((sum,d)=>sum + d.MOD_heures_travaillees,0);const heuresEvol = heures2024 > 0 ?((heures2025 - heures2024)/ heures2024 * 100):0;document.getElementById('heures2024').textContent =(heures2024>0&&!isNaN(heures2024))?Math.round(heures2024).toLocaleString('fr-FR')+' h':'N/A';document.getElementById('heures2025').textContent =(heures2025>0&&!isNaN(heures2025))?Math.round(heures2025).toLocaleString('fr-FR')+' h':'N/A';const heuresBadge = document.getElementById('heuresEvol');heuresBadge.textContent =(heures2024>0&&heures2025>0)?(heuresEvol>=0?'↗ +':'↘ ')+heuresEvol.toFixed(1)+'%':'N/A';heuresBadge.className = 'evolution-badge ' +((heures2024<=0||heures2025<=0)?'neutral':heuresEvol>=5?'negative':heuresEvol<=-5?'positive':'neutral');
   }document.getElementById('monthFilter').addEventListener('change',updatePerformanceTable);document.getElementById('yearFilter').addEventListener('change',updatePerformanceTable);window.addEventListener('load',()=>{setTimeout(updatePerformanceTable,300);});
 async function smartPrint_OLD_DISABLED(){
     try {
@@ -1748,4 +1850,495 @@ document.addEventListener('click',function(e){
   }
 });
 
+
+/* ═══════════════════════════════════════
+   MOTEUR DE DÉTECTION D'ANOMALIES
+═══════════════════════════════════════ */
+var _anomalyFilter = 'all';
+var _lastAnomalies = [];
+
+function filterAnomalies(type, btn) {
+  _anomalyFilter = type;
+  document.querySelectorAll('.anomaly-filter-btn').forEach(b => {
+    b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderAnomalies(_lastAnomalies);
+}
+
+function renderAnomalies(anomalies) {
+  _lastAnomalies = anomalies;
+  var list = document.getElementById('anomalyList');
+  if (!list) return;
+  var filtered = _anomalyFilter === 'all' ? anomalies : anomalies.filter(a => a.level === _anomalyFilter);
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="anomaly-empty">' + (_anomalyFilter === 'all' ? '✅ Aucune anomalie détectée sur cette période.' : '✅ Aucune anomalie de ce type.') + '</div>';
+    return;
+  }
+  var order = {critical:0, warning:1, info:2};
+  filtered.sort((a,b) => (order[a.level]||2) - (order[b.level]||2));
+  var icon = {critical:'🔴', warning:'🟠', info:'🟢'};
+  list.innerHTML = filtered.map(function(a) {
+    var vals = a.values.map(function(v) {
+      return '<span class="anomaly-val"><strong>' + v.label + '</strong> : ' + v.value + '</span>';
+    }).join('');
+    return '<div class="anomaly-item ' + a.level + '">' +
+      '<div class="anomaly-badge">' + icon[a.level] + '</div>' +
+      '<div class="anomaly-body">' +
+        '<div class="anomaly-title">' + a.title + '</div>' +
+        '<div class="anomaly-meta">📅 ' + a.date + ' · 📊 ' + a.indicator + '</div>' +
+        (vals ? '<div class="anomaly-values">' + vals + '</div>' : '') +
+        '<div class="anomaly-explanation">ℹ️ ' + a.explanation + '</div>' +
+        '<div class="anomaly-recommendation">→ ' + a.recommendation + '</div>' +
+      '</div>' +
+      '<div class="anomaly-date">' + a.date + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function updateAnomalySummary(anomalies, prevCount) {
+  var crit = anomalies.filter(a=>a.level==='critical').length;
+  var warn = anomalies.filter(a=>a.level==='warning').length;
+  var info = anomalies.filter(a=>a.level==='info').length;
+  var total = anomalies.length;
+  var setEl = function(id, v) { var el=document.getElementById(id); if(el) el.textContent=v; };
+  setEl('anomCount', total);
+  setEl('anomCritical', crit);
+  setEl('anomWarning', warn);
+  setEl('anomInfo', info);
+  if (prevCount !== null && prevCount !== undefined) {
+    var diff = total - prevCount;
+    setEl('anomTrend', (diff > 0 ? '▲ +' : diff < 0 ? '▼ ' : '= ') + diff);
+  }
+}
+
+function fmt(v, decimals) {
+  if (v === null || v === undefined || isNaN(v)) return 'N/A';
+  return Number(v).toLocaleString('fr-FR', {maximumFractionDigits: decimals||1});
+}
+
+function runAnomalyDetection() {
+  try {
+    var secteurs = (typeof getAllSelectedSecteurs === 'function') ? getAllSelectedSecteurs() : [];
+    var selectedMois = (typeof getSelectedMois === 'function') ? getSelectedMois() : [];
+    var annee = parseInt(document.getElementById('yearFilter').value) || new Date().getFullYear();
+    var threshold = parseFloat(document.getElementById('anomalyThreshold').value) || 20;
+
+    var anomalies = [];
+    var periodLabel = selectedMois.join(', ') + ' ' + annee;
+
+    // ── DATA PRODUCTION ──────────────────────────────────────
+    var dataProd = (typeof DATA_PRODUCTION !== 'undefined') ? DATA_PRODUCTION.filter(function(d) {
+      return secteurs.includes(d.Secteur) && selectedMois.includes(d.Mois) && d.Annee === annee;
+    }) : [];
+
+    var dataProdAll = (typeof DATA_PRODUCTION !== 'undefined') ? DATA_PRODUCTION.filter(function(d) {
+      return secteurs.includes(d.Secteur) && d.Annee === annee;
+    }) : [];
+
+    // Previous month data
+    var moisOrdre = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    var prevMoisList = [];
+    selectedMois.forEach(function(m) {
+      var idx = moisOrdre.indexOf(m);
+      if (idx > 0) prevMoisList.push(moisOrdre[idx-1]);
+    });
+
+    var dataProdPrev = (typeof DATA_PRODUCTION !== 'undefined') ? DATA_PRODUCTION.filter(function(d) {
+      return secteurs.includes(d.Secteur) && prevMoisList.includes(d.Mois) && d.Annee === annee;
+    }) : [];
+
+    // 12-month history for averages
+    var dataProd12 = (typeof DATA_PRODUCTION !== 'undefined') ? DATA_PRODUCTION.filter(function(d) {
+      return secteurs.includes(d.Secteur);
+    }) : [];
+
+    // ── DATA RH ──────────────────────────────────────────────
+    var dataRH = (typeof DATA_RH !== 'undefined') ? DATA_RH.filter(function(d) {
+      return secteurs.includes(d.Secteur) && selectedMois.includes(d.Mois) && d.Annee === annee;
+    }) : [];
+
+    var dataRHPrev = (typeof DATA_RH !== 'undefined') ? DATA_RH.filter(function(d) {
+      return secteurs.includes(d.Secteur) && prevMoisList.includes(d.Mois) && d.Annee === annee;
+    }) : [];
+
+    var dataRH12 = (typeof DATA_RH !== 'undefined') ? DATA_RH.filter(function(d) {
+      return secteurs.includes(d.Secteur);
+    }) : [];
+
+    function avg(arr, field) {
+      var vals = arr.map(function(d){return d[field];}).filter(function(v){return v!=null&&!isNaN(v)&&v>0;});
+      if (!vals.length) return null;
+      return vals.reduce(function(a,b){return a+b;},0) / vals.length;
+    }
+    function sum(arr, field) {
+      var vals = arr.map(function(d){return d[field];}).filter(function(v){return v!=null&&!isNaN(v);});
+      if (!vals.length) return null;
+      return vals.reduce(function(a,b){return a+b;},0);
+    }
+    function pctChange(curr, prev) {
+      if (!prev || prev === 0) return null;
+      return ((curr - prev) / Math.abs(prev)) * 100;
+    }
+    function addAnomaly(level, title, indicator, date, values, explanation, recommendation) {
+      anomalies.push({level, title, indicator, date: date||periodLabel, values: values||[], explanation, recommendation});
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // 1. DONNÉES MANQUANTES
+    // ══════════════════════════════════════════════════════════
+    if (dataProd.length === 0 && secteurs.length > 0) {
+      addAnomaly('critical', 'Aucune donnée de production', 'Production globale', periodLabel, [],
+        'Aucune donnée de production trouvée pour la période et les secteurs sélectionnés.',
+        'Vérifier que les données ont été importées dans Excel et relancer update_dashboard.bat.');
+    } else {
+      // Quantités manquantes
+      var missingProd = dataProd.filter(function(d){return d.Prod_Globale==null||isNaN(d.Prod_Globale)||d.Prod_Globale===0;});
+      if (missingProd.length > 0) {
+        addAnomaly('warning', 'Quantités de production non renseignées', 'Prod_Globale',
+          periodLabel,
+          [{label:'Semaines concernées', value: missingProd.map(function(d){return d.Semaine;}).join(', ')}],
+          missingProd.length + ' semaine(s) sans quantité de production enregistrée.',
+          'Vérifier et compléter les données de production dans le fichier Excel.');
+      }
+      // Heures manquantes
+      var missingHeures = dataProd.filter(function(d){return d.MOD_heures_travaillees==null||isNaN(d.MOD_heures_travaillees)||d.MOD_heures_travaillees===0;});
+      if (missingHeures.length > 0) {
+        addAnomaly('warning', 'Heures MOD non renseignées', 'MOD_heures_travaillees',
+          periodLabel,
+          [{label:'Semaines concernées', value: missingHeures.map(function(d){return d.Semaine;}).join(', ')}],
+          missingHeures.length + ' semaine(s) sans heures de main d'œuvre enregistrées.',
+          'Compléter les heures MOD dans le fichier Excel source.');
+      }
+      // CA/Prix manquant
+      var missingCA = dataProd.filter(function(d){return (d.ca==null||isNaN(d.ca)||d.ca===0) && (d.Prod_Globale>0);});
+      if (missingCA.length > 0) {
+        addAnomaly('warning', 'Chiffre d'affaires manquant', 'CA',
+          periodLabel,
+          [{label:'Semaines concernées', value: missingCA.slice(0,5).map(function(d){return d.Semaine;}).join(', ')}],
+          missingCA.length + ' semaine(s) avec production mais sans CA renseigné.',
+          'Renseigner le CA dans le fichier Excel pour permettre le calcul des indicateurs financiers.');
+      }
+    }
+
+    // RH manquant
+    if (dataRH.length === 0 && secteurs.length > 0) {
+      addAnomaly('warning', 'Données RH manquantes', 'RH',
+        periodLabel, [],
+        'Aucune donnée RH trouvée pour la période sélectionnée.',
+        'Importer les données RH dans le fichier Excel et relancer la mise à jour.');
+    } else {
+      var missingETP = dataRH.filter(function(d){return d.NB_ETP==null||isNaN(d.NB_ETP)||d.NB_ETP===0;});
+      if (missingETP.length > 0) {
+        addAnomaly('warning', 'ETP non renseignés', 'NB_ETP',
+          periodLabel, [{label:'Entrées', value: missingETP.length}],
+          'Des enregistrements RH n'ont pas de valeur ETP.',
+          'Compléter les ETP dans les données RH.');
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // 2. VALEURS NÉGATIVES NON AUTORISÉES
+    // ══════════════════════════════════════════════════════════
+    var negFields = ['Prod_Globale','MOD_heures_travaillees','Cout_total','ca'];
+    negFields.forEach(function(field) {
+      var neg = dataProd.filter(function(d){return d[field]!=null && !isNaN(d[field]) && d[field]<0;});
+      if (neg.length > 0) {
+        addAnomaly('critical', 'Valeur négative non autorisée : ' + field, field,
+          periodLabel,
+          [{label:'Semaines', value: neg.map(function(d){return d.Semaine;}).join(', ')},
+           {label:'Valeurs', value: neg.map(function(d){return fmt(d[field]);}).join(', ')}],
+          'Des valeurs négatives ont été détectées pour ' + field + ', ce qui n'est pas autorisé.',
+          'Corriger les données sources dans le fichier Excel.');
+      }
+    });
+
+    // ══════════════════════════════════════════════════════════
+    // 3. INCOHÉRENCES DE CALCUL
+    // ══════════════════════════════════════════════════════════
+    // Productivité incohérente : vitesse hors plage réaliste
+    dataProd.forEach(function(d) {
+      if (d.Vit_prod != null && !isNaN(d.Vit_prod)) {
+        if (d.Vit_prod > 20 || d.Vit_prod < 0.5) {
+          var lvl = d.Vit_prod > 30 ? 'critical' : 'warning';
+          addAnomaly(lvl, 'Productivité hors plage réaliste', 'Vit_prod / Productivité',
+            d.Semaine + ' — ' + d.Mois,
+            [{label:'Vitesse observée', value: fmt(d.Vit_prod) + ' plis/h'},{label:'Plage attendue', value:'0.5 – 20 plis/h'}],
+            'La vitesse de production de ' + fmt(d.Vit_prod) + ' plis/h semble incohérente avec les valeurs habituelles.',
+            'Vérifier le calcul de la productivité pour la semaine ' + d.Semaine + '.');
+        }
+      }
+    });
+
+    // Coût / 1000 incohérent
+    dataProd.forEach(function(d) {
+      if (d.Cout_pour_1000 != null && !isNaN(d.Cout_pour_1000) && d.Cout_pour_1000 > 0) {
+        if (d.Cout_pour_1000 > 500) {
+          addAnomaly('warning', 'Coût pour 1 000 plis anormalement élevé', 'Cout_pour_1000',
+            d.Semaine + ' — ' + d.Mois,
+            [{label:'Coût/1000 observé', value: fmt(d.Cout_pour_1000) + ' €'},{label:'Seuil alerte', value:'500 €'}],
+            'Le coût pour 1 000 plis traités est anormalement élevé (' + fmt(d.Cout_pour_1000) + ' €).',
+            'Analyser la répartition des coûts sur cette semaine et comparer avec l'historique.');
+        }
+      }
+    });
+
+    // ══════════════════════════════════════════════════════════
+    // 4. VARIATIONS ANORMALES vs MOIS PRÉCÉDENT
+    // ══════════════════════════════════════════════════════════
+    var prodCurr = sum(dataProd, 'Prod_Globale');
+    var prodPrev = sum(dataProdPrev, 'Prod_Globale');
+    if (prodCurr != null && prodPrev != null && prodPrev > 0) {
+      var pct = pctChange(prodCurr, prodPrev);
+      if (pct != null && Math.abs(pct) > threshold) {
+        var lvl = Math.abs(pct) > threshold*2 ? 'critical' : 'warning';
+        addAnomaly(lvl,
+          (pct < 0 ? '📉 Baisse' : '📈 Hausse') + ' de production vs mois précédent (' + fmt(pct,1) + '%)',
+          'Production globale', periodLabel,
+          [{label:'Période actuelle', value: fmt(prodCurr,0) + ' plis'},
+           {label:'Mois précédent', value: fmt(prodPrev,0) + ' plis'},
+           {label:'Variation', value: (pct>0?'+':'')+fmt(pct,1)+'%'}],
+          'La production a ' + (pct<0?'chuté':'augmenté') + ' de ' + fmt(Math.abs(pct),1) + '% par rapport au mois précédent, dépassant le seuil de ±' + threshold + '%.',
+          pct < 0 ? 'Identifier les causes : absence, panne, baisse de commandes.' : 'Vérifier que cette hausse est maîtrisée et que les ressources sont suffisantes.');
+      }
+    }
+
+    // Variation coût
+    var coutCurr = sum(dataProd, 'Cout_total');
+    var coutPrev = sum(dataProdPrev, 'Cout_total');
+    if (coutCurr != null && coutPrev != null && coutPrev > 0) {
+      var pctCout = pctChange(coutCurr, coutPrev);
+      if (pctCout != null && Math.abs(pctCout) > threshold) {
+        addAnomaly(Math.abs(pctCout) > threshold*2 ? 'critical' : 'warning',
+          (pctCout<0?'📉 Baisse':'📈 Hausse') + ' des coûts vs mois précédent (' + fmt(pctCout,1) + '%)',
+          'Coût total', periodLabel,
+          [{label:'Coût actuel', value: fmt(coutCurr,0) + ' €'},
+           {label:'Mois précédent', value: fmt(coutPrev,0) + ' €'},
+           {label:'Variation', value: (pctCout>0?'+':'')+fmt(pctCout,1)+'%'}],
+          'Les coûts ont ' + (pctCout<0?'baissé':'augmenté') + ' de ' + fmt(Math.abs(pctCout),1) + '% par rapport au mois précédent.',
+          pctCout > 0 ? 'Analyser la structure des coûts : heures supplémentaires, intérim, matières.' : 'Confirmer que la baisse reflète une réduction réelle d'activité.');
+      }
+    }
+
+    // Variation ETP
+    if (dataRH.length > 0 && dataRHPrev.length > 0) {
+      var etpCurr = avg(dataRH, 'NB_ETP');
+      var etpPrev = avg(dataRHPrev, 'NB_ETP');
+      if (etpCurr != null && etpPrev != null) {
+        var pctETP = pctChange(etpCurr, etpPrev);
+        if (pctETP != null && Math.abs(pctETP) > threshold) {
+          addAnomaly('warning',
+            (pctETP<0?'📉 Baisse':'📈 Hausse') + ' des ETP vs mois précédent (' + fmt(pctETP,1) + '%)',
+            'NB_ETP', periodLabel,
+            [{label:'ETP actuel', value: fmt(etpCurr,1)},{label:'Mois précédent', value: fmt(etpPrev,1)},{label:'Variation', value:(pctETP>0?'+':'')+fmt(pctETP,1)+'%'}],
+            'Le nombre d'ETP a varié significativement (' + fmt(Math.abs(pctETP),1) + '%) par rapport au mois précédent.',
+            'Vérifier les mouvements de personnel (départs, embauches, absences longues durée).');
+        }
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // 5. COMPARAISON À LA MOYENNE 12 MOIS
+    // ══════════════════════════════════════════════════════════
+    var avgProd12 = avg(dataProd12, 'Prod_Globale');
+    if (avgProd12 != null && prodCurr != null) {
+      var pct12 = pctChange(prodCurr, avgProd12);
+      if (pct12 != null && Math.abs(pct12) > threshold * 1.5) {
+        var lvl12 = Math.abs(pct12) > threshold * 3 ? 'critical' : 'warning';
+        addAnomaly(lvl12,
+          'Production très éloignée de la moyenne 12 mois (' + fmt(pct12,1) + '%)',
+          'Production globale', periodLabel,
+          [{label:'Valeur actuelle', value: fmt(prodCurr,0) + ' plis'},
+           {label:'Moyenne 12 mois', value: fmt(avgProd12,0) + ' plis'},
+           {label:'Écart', value:(pct12>0?'+':'')+fmt(pct12,1)+'%'}],
+          'La production s'écarte de ' + fmt(Math.abs(pct12),1) + '% par rapport à la moyenne historique sur 12 mois.',
+          'Analyser si cet écart est justifié par un changement structurel ou s'il représente une dérive à corriger.');
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // 6. ÉCARTS PRÉVISIONNEL / RÉALISÉ
+    // ══════════════════════════════════════════════════════════
+    dataProd.forEach(function(d) {
+      // Objectif vitesse vs réalisé
+      if (d.objectif_vitesse && !isNaN(d.objectif_vitesse) && d.objectif_vitesse > 0 &&
+          d.Vit_prod && !isNaN(d.Vit_prod)) {
+        var ecartVit = ((d.Vit_prod - d.objectif_vitesse) / d.objectif_vitesse) * 100;
+        if (ecartVit < -threshold) {
+          addAnomaly(ecartVit < -threshold*2 ? 'critical' : 'warning',
+            'KPI Vitesse en dérive : objectif non atteint (' + fmt(ecartVit,1) + '%)',
+            'Vit_prod vs Objectif', d.Semaine + ' — ' + d.Mois,
+            [{label:'Réalisé', value: fmt(d.Vit_prod,2) + ' plis/h'},
+             {label:'Objectif', value: fmt(d.objectif_vitesse,2) + ' plis/h'},
+             {label:'Écart', value: fmt(ecartVit,1) + '%'}],
+            'La vitesse de production (' + fmt(d.Vit_prod,2) + ') est inférieure de ' + fmt(Math.abs(ecartVit),1) + '% à l'objectif fixé.',
+            'Analyser les causes de sous-performance : machine, effectif, qualité matière.');
+        }
+      }
+      // Objectif coût vs réalisé
+      if (d.objectif_cout && !isNaN(d.objectif_cout) && d.objectif_cout > 0 &&
+          d.Cout_pour_1000 && !isNaN(d.Cout_pour_1000)) {
+        var ecartCout = ((d.Cout_pour_1000 - d.objectif_cout) / d.objectif_cout) * 100;
+        if (ecartCout > threshold) {
+          addAnomaly(ecartCout > threshold*2 ? 'critical' : 'warning',
+            'Coût/1000 au-dessus de l'objectif (' + fmt(ecartCout,1) + '% d'écart)',
+            'Cout_pour_1000 vs Objectif', d.Semaine + ' — ' + d.Mois,
+            [{label:'Réalisé', value: fmt(d.Cout_pour_1000,1) + ' €/1000'},
+             {label:'Objectif', value: fmt(d.objectif_cout,1) + ' €/1000'},
+             {label:'Écart', value: '+' + fmt(ecartCout,1) + '%'}],
+            'Le coût pour 1 000 plis traités dépasse l'objectif de ' + fmt(ecartCout,1) + '%.',
+            'Revoir la structure des coûts (main d'œuvre, intérim) et les actions de maîtrise des charges.');
+        }
+      }
+    });
+
+    // ══════════════════════════════════════════════════════════
+    // 7. DÉTECTION MÉTIER AVANCÉE
+    // ══════════════════════════════════════════════════════════
+    // Si la production baisse mais que le coût augmente
+    if (prodCurr != null && prodPrev != null && coutCurr != null && coutPrev != null &&
+        prodPrev > 0 && coutPrev > 0) {
+      var prodDown = prodCurr < prodPrev;
+      var coutUp = coutCurr > coutPrev;
+      if (prodDown && coutUp) {
+        var pctProdDrop = pctChange(prodCurr, prodPrev);
+        var pctCoutRise = pctChange(coutCurr, coutPrev);
+        addAnomaly('critical',
+          'Alerte : production en baisse mais coûts en hausse',
+          'Production / Coûts', periodLabel,
+          [{label:'Variation production', value: fmt(pctProdDrop,1) + '%'},
+           {label:'Variation coûts', value: '+' + fmt(pctCoutRise,1) + '%'}],
+          'La production diminue (' + fmt(pctProdDrop,1) + '%) tandis que les coûts augmentent (+' + fmt(pctCoutRise,1) + '%). Le ratio coût/efficacité se dégrade fortement.',
+          'Auditer les charges fixes, l'intérim, et les arrêts non productifs. Prendre des mesures correctives immédiates.');
+      }
+    }
+
+    // Heures en hausse mais productivité en baisse
+    var heureCurr = sum(dataProd, 'MOD_heures_travaillees');
+    var heurePrev = sum(dataProdPrev, 'MOD_heures_travaillees');
+    var vitCurr = avg(dataProd, 'Vit_prod');
+    var vitPrev = avg(dataProdPrev, 'Vit_prod');
+    if (heureCurr != null && heurePrev != null && vitCurr != null && vitPrev != null &&
+        heurePrev > 0 && vitPrev > 0) {
+      if (heureCurr > heurePrev * 1.05 && vitCurr < vitPrev * 0.95) {
+        addAnomaly('critical',
+          'Alerte : heures en hausse, productivité en baisse',
+          'MOD_heures / Productivité', periodLabel,
+          [{label:'Heures actuel', value: fmt(heureCurr,0) + 'h'},
+           {label:'Heures précédent', value: fmt(heurePrev,0) + 'h'},
+           {label:'Productivité actuelle', value: fmt(vitCurr,2)},
+           {label:'Productivité précédente', value: fmt(vitPrev,2)}],
+          'Les heures de main d'œuvre ont augmenté mais la productivité a baissé simultanément. Cela indique une inefficacité ou un problème organisationnel.',
+          'Analyser les causes : formation, qualité matière, organisation du travail, pannes machines.');
+      }
+    }
+
+    // Taux absentéisme
+    if (dataRH.length > 0) {
+      var totalHeuresAbs = sum(dataRH, 'Heures_Absence');
+      var totalHeuresJS = sum(dataRH, 'Heures_JS');
+      if (totalHeuresAbs != null && totalHeuresJS != null && totalHeuresJS > 0) {
+        var tauxAbs = (totalHeuresAbs / totalHeuresJS) * 100;
+        if (tauxAbs > 10) {
+          addAnomaly(tauxAbs > 20 ? 'critical' : 'warning',
+            'Taux d'absentéisme élevé (' + fmt(tauxAbs,1) + '%)',
+            'Heures_Absence / Heures_JS', periodLabel,
+            [{label:'Heures absence', value: fmt(totalHeuresAbs,0) + 'h'},
+             {label:'Heures JS', value: fmt(totalHeuresJS,0) + 'h'},
+             {label:'Taux', value: fmt(tauxAbs,1) + '%'}],
+            'Le taux d'absentéisme de ' + fmt(tauxAbs,1) + '% dépasse le seuil d'alerte de 10%.',
+            'Analyser les types d'absence (maladie, AT, injustifiée) et mettre en place des actions de prévention.');
+        } else if (tauxAbs > 5) {
+          addAnomaly('info',
+            'Absentéisme à surveiller (' + fmt(tauxAbs,1) + '%)',
+            'Heures_Absence / Heures_JS', periodLabel,
+            [{label:'Taux', value: fmt(tauxAbs,1) + '%'}],
+            'Le taux d'absentéisme est entre 5% et 10%, à surveiller.',
+            'Maintenir une veille sur l'évolution de l'absentéisme.');
+        }
+      }
+    }
+
+    // Recours à l'intérim
+    if (dataRH.length > 0) {
+      var effectifTotal = sum(dataRH, 'Effectif');
+      var nbInterim = sum(dataRH, 'NB_Interimaires');
+      var coutInterim = sum(dataRH, 'Cout_interim');
+      var montantMS = sum(dataRH, 'Montant_MS');
+      if (nbInterim != null && effectifTotal != null && effectifTotal > 0) {
+        var tauxInterim = (nbInterim / effectifTotal) * 100;
+        if (tauxInterim > 30) {
+          addAnomaly(tauxInterim > 50 ? 'critical' : 'warning',
+            'Recours à l'intérim excessif (' + fmt(tauxInterim,1) + '% de l'effectif)',
+            'NB_Interimaires / Effectif', periodLabel,
+            [{label:'Intérimaires', value: fmt(nbInterim,0)},
+             {label:'Effectif total', value: fmt(effectifTotal,0)},
+             {label:'Taux intérim', value: fmt(tauxInterim,1) + '%'}],
+            'Le recours à l'intérim représente ' + fmt(tauxInterim,1) + '% de l'effectif, dépassant le seuil de 30%.',
+            'Évaluer l'opportunité de CDI ou CDD pour réduire les coûts intérim et sécuriser la production.');
+        }
+      }
+      // Coût intérim vs masse salariale
+      if (coutInterim != null && montantMS != null && montantMS > 0) {
+        var ratioInterimMS = (coutInterim / montantMS) * 100;
+        if (ratioInterimMS > 40) {
+          addAnomaly('warning',
+            'Coût intérim élevé vs masse salariale (' + fmt(ratioInterimMS,1) + '%)',
+            'Cout_interim / Montant_MS', periodLabel,
+            [{label:'Coût intérim', value: fmt(coutInterim,0) + ' €'},
+             {label:'Masse salariale', value: fmt(montantMS,0) + ' €'},
+             {label:'Ratio', value: fmt(ratioInterimMS,1) + '%'}],
+            'Le coût de l'intérim représente ' + fmt(ratioInterimMS,1) + '% de la masse salariale permanente.',
+            'Analyser le besoin en intérim et envisager des alternatives plus économiques.');
+        }
+      }
+    }
+
+    // Activité globale baisse mais un indicateur monte fortement (HLD)
+    dataProd.forEach(function(d) {
+      if (d.HLD != null && !isNaN(d.HLD) && d.HLD > 0 && d.Prod_Globale > 0) {
+        var pctHLD = (d.HLD / d.Prod_Globale) * 100;
+        if (pctHLD > 20) {
+          addAnomaly('warning',
+            'Part HLD anormalement élevée (' + fmt(pctHLD,1) + '% de la production)',
+            'HLD / Production', d.Semaine + ' — ' + d.Mois,
+            [{label:'Quantité HLD', value: fmt(d.HLD,0)},
+             {label:'Production totale', value: fmt(d.Prod_Globale,0)},
+             {label:'Part HLD', value: fmt(pctHLD,1) + '%'}],
+            'La production HLD représente ' + fmt(pctHLD,1) + '% de la production totale sur la semaine ' + d.Semaine + ', dépassant le seuil de 20%.',
+            'Vérifier la qualité de traitement et le taux de conformité des plis HLD.');
+        }
+      }
+    });
+
+    // ══════════════════════════════════════════════════════════
+    // 8. INFORMATIONS (écarts faibles, contrôles de routine)
+    // ══════════════════════════════════════════════════════════
+    var vitAvg12 = avg(dataProd12, 'Vit_prod');
+    if (vitAvg12 != null && vitCurr != null) {
+      var pctVit12 = pctChange(vitCurr, vitAvg12);
+      if (pctVit12 != null && Math.abs(pctVit12) > 10 && Math.abs(pctVit12) <= threshold) {
+        addAnomaly('info',
+          'Légère variation de productivité vs moyenne 12 mois (' + fmt(pctVit12,1) + '%)',
+          'Vit_prod / Moyenne historique', periodLabel,
+          [{label:'Productivité actuelle', value: fmt(vitCurr,2)},
+           {label:'Moyenne 12 mois', value: fmt(vitAvg12,2)},
+           {label:'Écart', value: (pctVit12>0?'+':'')+fmt(pctVit12,1)+'%'}],
+          'La productivité s'écarte légèrement (' + fmt(Math.abs(pctVit12),1) + '%) de la moyenne historique.',
+          'Surveiller l'évolution. Aucune action urgente requise pour l'instant.');
+      }
+    }
+
+    // Calcul tendance vs mois précédent (count anomalies mois précédent approximation)
+    var prevCount = null; // Would require storing previous detection result
+
+    updateAnomalySummary(anomalies, prevCount);
+    renderAnomalies(anomalies);
+    _lastAnomalies = anomalies;
+
+  } catch(e) {
+    console.error('Anomaly detection error:', e);
+    document.getElementById('anomalyList').innerHTML = '<div class="anomaly-empty">Erreur lors de la détection : ' + e.message + '</div>';
+  }
+}
 </script></body></html>
