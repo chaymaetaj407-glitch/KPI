@@ -261,6 +261,40 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
                             f'<option value="{m}">{m}</option>'
                         )
                 print(f"   OK Titre mis a jour: {dernier_mois} {int(derniere_annee)}")
+
+                # ── Mettre à jour les checkboxes ck_mois_* (lu par getSelectedMois()) ──
+                mois_ck_ids = {
+                    'Janvier':'Janvier','Février':'Fevrier','Mars':'Mars','Avril':'Avril',
+                    'Mai':'Mai','Juin':'Juin','Juillet':'Juillet','Août':'Aout',
+                    'Septembre':'Septembre','Octobre':'Octobre','Novembre':'Novembre','Décembre':'Decembre'
+                }
+                # Décocher tous les mois
+                for m in mois_ordre:
+                    mid = mois_ck_ids.get(m, m)
+                    content = re.sub(
+                        rf'(id="ck_mois_{mid}"[^>]*?)\s+checked\b',
+                        r'\1', content
+                    )
+                # Cocher le dernier mois
+                dernier_mid = mois_ck_ids.get(dernier_mois, dernier_mois)
+                content = re.sub(
+                    rf'(id="ck_mois_{dernier_mid}")',
+                    rf'\1 checked',
+                    content, count=1
+                )
+
+                # ── Mettre à jour yearFilter : sélectionner la bonne année ──
+                content = re.sub(
+                    r'(<option value="'+str(int(derniere_annee))+r'")(\s+selected)?',
+                    rf'<option value="{int(derniere_annee)}" selected',
+                    content, count=1
+                )
+                # Désélectionner les autres années
+                for yr_m in re.finditer(r'<option value="(\d{4})"(\s+selected)?>', content):
+                    if yr_m.group(1) != str(int(derniere_annee)):
+                        content = content.replace(yr_m.group(0),
+                            f'<option value="{yr_m.group(1)}">')
+                print(f"   OK Checkboxes mois et annee mis a jour: {dernier_mois} {int(derniere_annee)}")
     except Exception as e:
         print(f"   INFO: Titre non mis a jour: {e}")
 
