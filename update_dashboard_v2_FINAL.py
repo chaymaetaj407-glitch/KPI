@@ -264,6 +264,11 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
     except Exception as e:
         print(f"   INFO: Titre non mis a jour: {e}")
 
+    # Injecter kpi_enhancements.js si présent et pas encore référencé
+    if os.path.exists('kpi_enhancements.js') and 'kpi_enhancements.js' not in content:
+        content = content.replace('</body>', '<script src="kpi_enhancements.js"></script>\n</body>', 1)
+        print("   OK kpi_enhancements.js injecte dans le dashboard")
+
     with open(html_file, 'w', encoding='utf-8') as f:
         f.write(content)
 
