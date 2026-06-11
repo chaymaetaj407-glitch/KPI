@@ -67,6 +67,7 @@ function injectCSS() {
 
 // ── Injecter le filtre semaine dans la barre de filtres ──────────────
 function injectSemaineFilter() {
+  if (document.getElementById('semaineFilter')) return; // already in HTML
   var anneeFilter = document.getElementById('yearFilter');
   if (!anneeFilter) return;
   var anneeGroup = anneeFilter.closest('.filter-group') || anneeFilter.parentElement;
@@ -226,7 +227,7 @@ function addCobotObjectifLine() {
 function updateETPDetail(secteurs, mois, annee) {
   if (typeof DATA_RH === 'undefined') return;
   var data = DATA_RH.filter(function(d) {
-    return secteurs.includes(d.Secteur) && d.Mois === mois && d.Annee === annee;
+    return (!secteurs.length || secteurs.includes(d.Secteur)) && d.Mois === mois && d.Annee === annee;
   });
   var etpPerm = 0, etpInt = 0;
   data.forEach(function(d) { etpPerm += (d.NB_ETP||0); etpInt += (d.NB_Interimaires||0); });
@@ -423,12 +424,15 @@ function init() {
   injectETPDetail();
   injectNewSections();
   renderPaieCalendrier();
-  populateSemaineFilter();
   patchUpdateDashboard();
   patchYearFilter();
-  // Ligne objectif sur le graphique (après que Chart.js ait eu le temps de rendre)
-  setTimeout(addCobotObjectifLine, 800);
-  setTimeout(addCobotObjectifLine, 2000); // second attempt
+  // Déclencher la mise à jour après que le dashboard original ait eu le temps de rendre
+  setTimeout(function() {
+    populateSemaineFilter();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    addCobotObjectifLine();
+  }, 300);
+  setTimeout(addCobotObjectifLine, 1500);
 }
 
 if (document.readyState === 'loading') {
