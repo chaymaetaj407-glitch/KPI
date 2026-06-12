@@ -11,16 +11,6 @@ import pandas as pd
 import json, os, sys, re, unicodedata
 from datetime import datetime
 import openpyxl
-import numpy as np
-
-# Sérialiseur JSON compatible numpy (évite que numpy.float64 → string "2026.0")
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):  return int(obj)
-        if isinstance(obj, np.floating): return float(obj)
-        if isinstance(obj, np.ndarray):  return obj.tolist()
-        if isinstance(obj, float) and obj != obj: return None  # NaN → null
-        return super().default(obj)
 
 # Répartition fixe semaines → mois (52 semaines)
 SEMAINE_MOIS = {}
@@ -152,11 +142,7 @@ def read_production_data(excel_file, calculated_cols):
 
     def val(r, col, default=None):
         v = r.get(col)
-        if v is None: return default
-        try:
-            if pd.isna(v): return default  # gère numpy.float64 NaN en toute version
-        except (TypeError, ValueError):
-            pass
+        if v is None or (isinstance(v, float) and pd.isna(v)): return default
         return v
 
     rows = []
@@ -218,7 +204,7 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
     with open(html_file, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    prod_json = json.dumps(prod_data, ensure_ascii=False, separators=(',',':'), cls=NpEncoder)
+    prod_json = json.dumps(prod_data, ensure_ascii=False, separators=(',',':'), default=str)
     d_pattern = re.compile(r'const _D=\[\[[\s\S]*?\]\];')
     if d_pattern.search(content):
         content = d_pattern.sub(f'const _D={prod_json};', content, count=1)
@@ -227,7 +213,7 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
         print("   ATTENTION: _D non trouve dans le HTML!")
 
     if rh_data is not None:
-        rh_json = json.dumps(rh_data, ensure_ascii=False, separators=(',',':'), cls=NpEncoder)
+        rh_json = json.dumps(rh_data, ensure_ascii=False, separators=(',',':'), default=str)
         rh_pattern = re.compile(r'const DATA_RH\s*=\s*\[[\s\S]*?\];')
         if rh_pattern.search(content):
             content = rh_pattern.sub(f'const DATA_RH ={rh_json};', content, count=1)
@@ -261,73 +247,61 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
                 if old_title:
                     content = content.replace(old_title.group(0),
                         f'Dashboard KPI - France Routage - {dernier_mois} {int(derniere_annee)}', 1)
-                # Mettre à jour le mois sélectionné par défaut (select caché)
+                # Mettre à jour le mois sélectionné par défaut
                 content = re.sub(
                     r'<option value="' + dernier_mois + r'">' + dernier_mois + r'</option>',
                     f'<option value="{dernier_mois}" selected="selected">{dernier_mois}</option>',
                     content, count=1
                 )
-                # Retirer selected des autres mois (select caché)
+                # Retirer selected des autres mois
                 for m in mois_ordre:
                     if m != dernier_mois:
                         content = content.replace(
                             f'<option value="{m}" selected="selected">{m}</option>',
                             f'<option value="{m}">{m}</option>'
                         )
+                print(f"   OK Titre mis a jour: {dernier_mois} {int(derniere_annee)}")
 
-                # ── CORRECTION : mettre à jour les CHECKBOXES de mois (vrai filtre) ──
-                MOIS_TO_CK = {
-                    'Janvier':'Janvier','Février':'Fevrier','Mars':'Mars',
-                    'Avril':'Avril','Mai':'Mai','Juin':'Juin',
-                    'Juillet':'Juillet','Août':'Aout','Septembre':'Septembre',
-                    'Octobre':'Octobre','Novembre':'Novembre','Décembre':'Decembre'
+                # ── Mettre à jour les checkboxes ck_mois_* (lu par getSelectedMois()) ──
+                mois_ck_ids = {
+                    'Janvier':'Janvier','Février':'Fevrier','Mars':'Mars','Avril':'Avril',
+                    'Mai':'Mai','Juin':'Juin','Juillet':'Juillet','Août':'Aout',
+                    'Septembre':'Septembre','Octobre':'Octobre','Novembre':'Novembre','Décembre':'Decembre'
                 }
                 # Décocher tous les mois
-                for ck_id in MOIS_TO_CK.values():
+                for m in mois_ordre:
+                    mid = mois_ck_ids.get(m, m)
                     content = re.sub(
-                        rf'(id="ck_mois_{ck_id}")\s+checked\b',
-                        rf'\1',
-                        content
+                        rf'(id="ck_mois_{mid}"[^>]*?)\s+checked\b',
+                        r'\1', content
                     )
-                # Cocher uniquement le dernier mois
-                if dernier_mois in MOIS_TO_CK:
-                    ck_id = MOIS_TO_CK[dernier_mois]
-                    content = re.sub(
-                        rf'(id="ck_mois_{ck_id}")',
-                        rf'\1 checked',
-                        content,
-                        count=1
-                    )
-                    print(f"   OK Checkbox mois mis a jour: {dernier_mois}")
-
-                # ── CORRECTION : mettre à jour le dropdown ANNÉE ──
-                annee_str = str(int(derniere_annee))
-                # Retirer selected de toutes les options année
+                # Cocher le dernier mois
+                dernier_mid = mois_ck_ids.get(dernier_mois, dernier_mois)
                 content = re.sub(
-                    r'(<option value="(\d{4})")\s+selected\b([^>]*>)',
-                    r'\1\3',
-                    content
+                    rf'(id="ck_mois_{dernier_mid}")',
+                    rf'\1 checked',
+                    content, count=1
                 )
-                # Ajouter selected à la bonne année (si l'option existe)
-                if re.search(rf'<option value="{annee_str}"[^>]*>', content):
-                    content = re.sub(
-                        rf'(<option value="{annee_str}")([^>]*>)',
-                        rf'\1 selected\2',
-                        content,
-                        count=1
-                    )
-                else:
-                    # L'année n'existe pas encore dans le HTML → l'injecter
-                    content = re.sub(
-                        r'(<select[^>]*id="yearFilter"[^>]*>)',
-                        rf'\1<option value="{annee_str}" selected>{annee_str}</option>',
-                        content,
-                        count=1
-                    )
-                print(f"   OK Dropdown annee mis a jour: {annee_str}")
-                print(f"   OK Titre mis a jour: {dernier_mois} {int(derniere_annee)}")
+
+                # ── Mettre à jour yearFilter : sélectionner la bonne année ──
+                content = re.sub(
+                    r'(<option value="'+str(int(derniere_annee))+r'")(\s+selected)?',
+                    rf'<option value="{int(derniere_annee)}" selected',
+                    content, count=1
+                )
+                # Désélectionner les autres années
+                for yr_m in re.finditer(r'<option value="(\d{4})"(\s+selected)?>', content):
+                    if yr_m.group(1) != str(int(derniere_annee)):
+                        content = content.replace(yr_m.group(0),
+                            f'<option value="{yr_m.group(1)}">')
+                print(f"   OK Checkboxes mois et annee mis a jour: {dernier_mois} {int(derniere_annee)}")
     except Exception as e:
         print(f"   INFO: Titre non mis a jour: {e}")
+
+    # Injecter kpi_enhancements.js si présent et pas encore référencé
+    if os.path.exists('kpi_enhancements.js') and 'kpi_enhancements.js' not in content:
+        content = content.replace('</body>', '<script src="kpi_enhancements.js"></script>\n</body>', 1)
+        print("   OK kpi_enhancements.js injecte dans le dashboard")
 
     with open(html_file, 'w', encoding='utf-8') as f:
         f.write(content)
