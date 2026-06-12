@@ -11,12 +11,22 @@ import pandas as pd
 import json, os, sys, re, unicodedata
 from datetime import datetime
 import openpyxl
+import numpy as np
+
+# Sérialiseur JSON compatible numpy (évite que numpy.float64 → string "2026.0")
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):  return int(obj)
+        if isinstance(obj, np.floating): return float(obj)
+        if isinstance(obj, np.ndarray):  return obj.tolist()
+        if isinstance(obj, float) and obj != obj: return None  # NaN → null
+        return super().default(obj)
 
 # Répartition fixe semaines → mois (52 semaines)
 SEMAINE_MOIS = {}
 _s = 1
 for _mois, _nb in [('Janvier',5),('Février',4),('Mars',4),('Avril',5),
-    ('Mai',4),('Juin',4),('Juillet',5),('Août',4),
+    ('Mai',4),('Juin',4),('Juillet',5),('Aût',4),
     ('Septembre',4),('Octobre',5),('Novembre',4),('Décembre',4)]:
     for _i in range(_nb):
         SEMAINE_MOIS[f'S{_s:02d}'] = _mois
@@ -43,7 +53,7 @@ def find_sheet(xl, keywords):
     return None
 
 # ─────────────────────────────────────────────
-# COMMENTAIRES
+COMMENTAIRES
 # ─────────────────────────────────────────────
 
 def read_comments_from_excel(excel_file):
@@ -88,7 +98,7 @@ def extract_comments_from_html(html_content):
     return {}
 
 # ─────────────────────────────────────────────
-# RÉCUPÉRER LES COLONNES CALCULÉES DE L'ANCIEN HTML
+RÉCUPÉRER LES COLONNES CALCULÉES DE L'ANCIEN HTML
 # ─────────────────────────────────────────────
 
 def extract_calculated_columns(html_content):
@@ -120,7 +130,7 @@ def extract_calculated_columns(html_content):
         return {}
 
 # ─────────────────────────────────────────────
-# LECTURE DONNÉES
+LECTURE DONNÉES
 # ─────────────────────────────────────────────
 
 def read_production_data(excel_file, calculated_cols):
@@ -142,7 +152,11 @@ def read_production_data(excel_file, calculated_cols):
 
     def val(r, col, default=None):
         v = r.get(col)
-        if v is None or (isinstance(v, float) and pd.isna(v)): return default
+        if v is None: return default
+        try:
+            if pd.isna(v): return default  # gère numpy.float64 NaN en toute version
+        except (TypeError, ValueError):
+            pass
         return v
 
     rows = []
@@ -197,14 +211,14 @@ def read_rh_data(excel_file):
     return df.to_dict(orient='records')
 
 # ─────────────────────────────────────────────
-# MISE À JOUR DASHBOARD
+MISE À JOUR DASHBOARD
 # ─────────────────────────────────────────────
 
 def update_dashboard(html_file, prod_data, rh_data, comments):
     with open(html_file, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    prod_json = json.dumps(prod_data, ensure_ascii=False, separators=(',',':'), default=str)
+    prod_json = json.dumps(prod_data, ensure_ascii=False, separators=(',',':'), cls=NpEncoder)
     d_pattern = re.compile(r'const _D=\[\[[\s\S]*?\]\];')
     if d_pattern.search(content):
         content = d_pattern.sub(f'const _D={prod_json};', content, count=1)
@@ -213,7 +227,7 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
         print("   ATTENTION: _D non trouve dans le HTML!")
 
     if rh_data is not None:
-        rh_json = json.dumps(rh_data, ensure_ascii=False, separators=(',',':'), default=str)
+        rh_json = json.dumps(rh_data, ensure_ascii=False, separators=(',',':'), cls=NpEncoder)
         rh_pattern = re.compile(r'const DATA_RH\s*=\s*\[[\s\S]*?\];')
         if rh_pattern.search(content):
             content = rh_pattern.sub(f'const DATA_RH ={rh_json};', content, count=1)
@@ -231,7 +245,7 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
     try:
         if prod_data and len(prod_data) > 1:
             mois_ordre = ['Janvier','Février','Mars','Avril','Mai','Juin',
-                          'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+                          'Juillet','Aût','Septembre','Octobre','Novembre','Décembre']
             dernier_mois = None
             derniere_annee = 0
             for row in prod_data[1:]:
@@ -247,19 +261,70 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
                 if old_title:
                     content = content.replace(old_title.group(0),
                         f'Dashboard KPI - France Routage - {dernier_mois} {int(derniere_annee)}', 1)
-                # Mettre à jour le mois sélectionné par défaut
+                # Mettre à jour le mois sélectionné par défaut (select caché)
                 content = re.sub(
                     r'<option value="' + dernier_mois + r'">' + dernier_mois + r'</option>',
                     f'<option value="{dernier_mois}" selected="selected">{dernier_mois}</option>',
                     content, count=1
                 )
-                # Retirer selected des autres mois
+                # Retirer selected des autres mois (select caché)
                 for m in mois_ordre:
                     if m != dernier_mois:
                         content = content.replace(
                             f'<option value="{m}" selected="selected">{m}</option>',
                             f'<option value="{m}">{m}</option>'
                         )
+
+                # ── CORRECTION : mettre à jour les CHECKBOXES de mois (vrai filtre) ──
+                MOIS_TO_CK = {
+                    'Janvier':'Janvier','Février':'Fevrier','Mars':'Mars',
+                    'Avril':'Avril','Mai':'Mai','Juin':'Juin',
+                    'Juillet':'Juillet','Aût':'Aout','Septembre':'Septembre',
+                    'Octobre':'Octobre','Novembre':'Novembre','Décembre':'Decembre'
+                }
+                # Décocher tous les mois
+                for ck_id in MOIS_TO_CK.values():
+                    content = re.sub(
+                        rf'(id="ck_mois_{ck_id}")\s+checked\b',
+                        rf'\1',
+                        content
+                    )
+                # Cocher uniquement le dernier mois
+                if dernier_mois in MOIS_TO_CK:
+                    ck_id = MOIS_TO_CK[dernier_mois]
+                    content = re.sub(
+                        rf'(id="ck_mois_{ck_id}")',
+                        rf'\1 checked',
+                        content,
+                        count=1
+                    )
+                    print(f"   OK Checkbox mois mis a jour: {dernier_mois}")
+
+                # ── CORRECTION : mettre à jour le dropdown ANNÉE ──
+                annee_str = str(int(derniere_annee))
+                # Retirer selected de toutes les options année
+                content = re.sub(
+                    r'(<option value="(\d{4})")\s+selected\b([^>]*>)',
+                    r'\1\3',
+                    content
+                )
+                # Ajouter selected à la bonne année (si l'option existe)
+                if re.search(rf'<option value="{annee_str}"[^>]*>', content):
+                    content = re.sub(
+                        rf'(<option value="{annee_str}")([^>]*>)',
+                        rf'\1 selected\2',
+                        content,
+                        count=1
+                    )
+                else:
+                    # L'année n'existe pas encore dans le HTML → l'injecter
+                    content = re.sub(
+                        r'(<select[^>]*id="yearFilter"[^>]*>)',
+                        rf'\1<option value="{annee_str}" selected>{annee_str}</option>',
+                        content,
+                        count=1
+                    )
+                print(f"   OK Dropdown annee mis a jour: {annee_str}")
                 print(f"   OK Titre mis a jour: {dernier_mois} {int(derniere_annee)}")
     except Exception as e:
         print(f"   INFO: Titre non mis a jour: {e}")
@@ -268,7 +333,7 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
         f.write(content)
 
 # ─────────────────────────────────────────────
-# NETTOYAGE DONNÉES ANCIENNES (garde 5 ans)
+NETTOYAGE DONNÉES ANCIENNES (garde 5 ans)
 # ─────────────────────────────────────────────
 
 def clean_old_data(excel_file, keep_years=5):
@@ -330,7 +395,7 @@ def clean_old_data(excel_file, keep_years=5):
         print(f"   ATTENTION nettoyage: {e}")
 
 # ─────────────────────────────────────────────
-# CALCUL AUTOMATIQUE cout_interim + ratio dans Excel
+CALCUL AUTOMATIQUE cout_interim + ratio dans Excel
 # ─────────────────────────────────────────────
 
 def calculate_and_save_kpis(excel_file):
@@ -392,7 +457,7 @@ def calculate_and_save_kpis(excel_file):
 
 
 # ─────────────────────────────────────────────
-# IMPORT AUTOMATIQUE FICHIER MANAGER (bilan_prod_semaine)
+IMPORT AUTOMATIQUE FICHIER MANAGER (bilan_prod_semaine)
 # ─────────────────────────────────────────────
 
 def find_manager_files():
@@ -602,7 +667,7 @@ def import_manager_file(manager_file, bdd_excel):
 
 
 # ─────────────────────────────────────────────
-# MAIN
+MAIN
 # ─────────────────────────────────────────────
 
 def main():
