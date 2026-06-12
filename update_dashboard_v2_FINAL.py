@@ -26,7 +26,7 @@ class NpEncoder(json.JSONEncoder):
 SEMAINE_MOIS = {}
 _s = 1
 for _mois, _nb in [('Janvier',5),('Février',4),('Mars',4),('Avril',5),
-    ('Mai',4),('Juin',4),('Juillet',5),('Aût',4),
+    ('Mai',4),('Juin',4),('Juillet',5),('Août',4),
     ('Septembre',4),('Octobre',5),('Novembre',4),('Décembre',4)]:
     for _i in range(_nb):
         SEMAINE_MOIS[f'S{_s:02d}'] = _mois
@@ -53,7 +53,7 @@ def find_sheet(xl, keywords):
     return None
 
 # ─────────────────────────────────────────────
-COMMENTAIRES
+# COMMENTAIRES
 # ─────────────────────────────────────────────
 
 def read_comments_from_excel(excel_file):
@@ -98,7 +98,7 @@ def extract_comments_from_html(html_content):
     return {}
 
 # ─────────────────────────────────────────────
-RÉCUPÉRER LES COLONNES CALCULÉES DE L'ANCIEN HTML
+# RÉCUPÉRER LES COLONNES CALCULÉES DE L'ANCIEN HTML
 # ─────────────────────────────────────────────
 
 def extract_calculated_columns(html_content):
@@ -130,7 +130,7 @@ def extract_calculated_columns(html_content):
         return {}
 
 # ─────────────────────────────────────────────
-LECTURE DONNÉES
+# LECTURE DONNÉES
 # ─────────────────────────────────────────────
 
 def read_production_data(excel_file, calculated_cols):
@@ -211,7 +211,7 @@ def read_rh_data(excel_file):
     return df.to_dict(orient='records')
 
 # ─────────────────────────────────────────────
-MISE À JOUR DASHBOARD
+# MISE À JOUR DASHBOARD
 # ─────────────────────────────────────────────
 
 def update_dashboard(html_file, prod_data, rh_data, comments):
@@ -245,7 +245,7 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
     try:
         if prod_data and len(prod_data) > 1:
             mois_ordre = ['Janvier','Février','Mars','Avril','Mai','Juin',
-                          'Juillet','Aût','Septembre','Octobre','Novembre','Décembre']
+                          'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
             dernier_mois = None
             derniere_annee = 0
             for row in prod_data[1:]:
@@ -279,7 +279,7 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
                 MOIS_TO_CK = {
                     'Janvier':'Janvier','Février':'Fevrier','Mars':'Mars',
                     'Avril':'Avril','Mai':'Mai','Juin':'Juin',
-                    'Juillet':'Juillet','Aût':'Aout','Septembre':'Septembre',
+                    'Juillet':'Juillet','Août':'Aout','Septembre':'Septembre',
                     'Octobre':'Octobre','Novembre':'Novembre','Décembre':'Decembre'
                 }
                 # Décocher tous les mois
@@ -333,7 +333,7 @@ def update_dashboard(html_file, prod_data, rh_data, comments):
         f.write(content)
 
 # ─────────────────────────────────────────────
-NETTOYAGE DONNÉES ANCIENNES (garde 5 ans)
+# NETTOYAGE DONNÉES ANCIENNES (garde 5 ans)
 # ─────────────────────────────────────────────
 
 def clean_old_data(excel_file, keep_years=5):
@@ -395,7 +395,7 @@ def clean_old_data(excel_file, keep_years=5):
         print(f"   ATTENTION nettoyage: {e}")
 
 # ─────────────────────────────────────────────
-CALCUL AUTOMATIQUE cout_interim + ratio dans Excel
+# CALCUL AUTOMATIQUE cout_interim + ratio dans Excel
 # ─────────────────────────────────────────────
 
 def calculate_and_save_kpis(excel_file):
@@ -457,7 +457,7 @@ def calculate_and_save_kpis(excel_file):
 
 
 # ─────────────────────────────────────────────
-IMPORT AUTOMATIQUE FICHIER MANAGER (bilan_prod_semaine)
+# IMPORT AUTOMATIQUE FICHIER MANAGER (bilan_prod_semaine)
 # ─────────────────────────────────────────────
 
 def find_manager_files():
@@ -667,7 +667,7 @@ def import_manager_file(manager_file, bdd_excel):
 
 
 # ─────────────────────────────────────────────
-MAIN
+# MAIN
 # ─────────────────────────────────────────────
 
 def main():
